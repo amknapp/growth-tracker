@@ -3,7 +3,7 @@
  * Displays growth chart with percentile curves and child's data
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import {
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { LineChart } from 'react-native-chart-kit';
+import { CartesianChart, Line, Scatter, AreaRange } from 'victory-native';
 import { GrowthChartNavigationProp, GrowthChartRouteProp } from '../types/navigation';
 import { Child, Measurement, ChartStandard, GrowthChartDataPoint } from '../types';
 import SecureStorage from '../services/SecureStorage';
@@ -27,19 +27,19 @@ import { calculateAgeInMonths } from '../utils/ageCalculator';
 import {
   calculatePercentile,
   getPercentileCurve,
-  STANDARD_PERCENTILES,
   interpretPercentile,
 } from '../utils/percentileCalculator';
 import { getCDCChartData } from '../data/cdcData';
 import { getWHOChartData } from '../data/whoData';
 import { Colors } from '../constants/colors';
+import { matchFont } from '@shopify/react-native-skia';
 
 interface Props {
   navigation: GrowthChartNavigationProp;
   route: GrowthChartRouteProp;
 }
 
-const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
+const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) => {
   const { childId, measurementType } = route.params;
 
   const [child, setChild] = useState<Child | null>(null);
@@ -49,8 +49,9 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const [loadingChart, setLoadingChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 32);
+  const [_chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 16);
   const drawerNavigation = useNavigation();
+  const font = matchFont({fontFamily: "sans-serif", fontSize: 10});
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
@@ -58,7 +59,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      setChartWidth(window.width - 32);
+      setChartWidth(window.width - 16);
     });
 
     return () => subscription?.remove();
@@ -66,15 +67,15 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
 
   useEffect(() => {
     loadData();
-  }, [childId, measurementType]);
+  }, [childId, measurementType, loadData]);
 
   useEffect(() => {
     if (child) {
       loadChartData();
     }
-  }, [child, chartStandard, measurementType]);
+  }, [child, chartStandard, measurementType, loadChartData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const childData = await SecureStorage.getChild(childId);
       const measurementsData = await SecureStorage.getMeasurementsByType(
@@ -84,16 +85,16 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
 
       setChild(childData);
       setMeasurements(measurementsData);
-    } catch (error) {
-      console.error('Error loading data:', error);
+    } catch (err) {
+      console.error('Error loading data:', err);
       setError('Failed to load child data');
       Alert.alert('Error', 'Failed to load chart data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [childId, measurementType]);
 
-  const loadChartData = async () => {
+  const loadChartData = useCallback(async () => {
     if (!child) return;
 
     setLoadingChart(true);
@@ -125,8 +126,8 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
       }
 
       setChartData(data);
-    } catch (error) {
-      console.error('Error loading chart data:', error);
+    } catch (err) {
+      console.error('Error loading chart data:', err);
       setError('Failed to load growth chart data. Using offline data.');
 
       // Fallback to local data
@@ -139,7 +140,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
     } finally {
       setLoadingChart(false);
     }
-  };
+  }, [child, chartStandard, measurementType]);
 
   if (loading) {
     return (
@@ -158,8 +159,8 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  // Prepare chart data for react-native-chart-kit (like CDC growth charts)
-  const prepareChartData = () => {
+  // Prepare chart data for Victory
+  const prepareVictoryData = () => {
     if (chartData.length === 0) {
       return null;
     }
@@ -175,101 +176,67 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
       const childMinAge = Math.min(...childAges);
       const childMaxAge = Math.max(...childAges);
 
-      // Show window around child's data (±6 months buffer)
-      minAge = Math.max(0, Math.floor(childMinAge - 6));
-      maxAge = Math.ceil(childMaxAge + 6);
+      // Show window around child's data (±3 months buffer on each side)
+      minAge = Math.max(0, Math.floor(childMinAge - 3));
+      maxAge = Math.ceil(childMaxAge + 3);
+
+      // Ensure at least 6 months wide
+      const range = maxAge - minAge;
+      if (range < 6) {
+        const expansion = (6 - range) / 2;
+        minAge = Math.max(0, minAge - expansion);
+        maxAge = maxAge + expansion;
+      }
     }
 
-    // Generate x-axis points (every 2 months for reasonable density)
-    const agePoints = [];
-    for (let age = minAge; age <= maxAge; age += 2) {
-      agePoints.push(age);
-    }
-
-    // Prepare datasets - show key percentiles like CDC charts
-    const datasets = [];
+    // Get all unique x values (ages) that we need
     const percentilesToShow = [5, 25, 50, 75, 95];
+    const allAges = new Set<number>();
 
-    percentilesToShow.forEach((percentile, index) => {
+    // Collect ages from percentile curves
+    percentilesToShow.forEach(percentile => {
       const curve = getPercentileCurve(percentile, chartData);
-
-      // Sort curve by age to ensure proper interpolation
-      const sortedCurve = [...curve].sort((a, b) => a.ageInMonths - b.ageInMonths);
-
-      const data = agePoints.map(age => {
-        // Find the two closest points for interpolation
-        let lowerPoint = null;
-        let upperPoint = null;
-
-        for (let i = 0; i < sortedCurve.length; i++) {
-          if (sortedCurve[i].ageInMonths <= age) {
-            lowerPoint = sortedCurve[i];
-          }
-          if (sortedCurve[i].ageInMonths >= age && !upperPoint) {
-            upperPoint = sortedCurve[i];
-            break;
-          }
-        }
-
-        // Interpolate between the two points
-        if (lowerPoint && upperPoint) {
-          if (lowerPoint.ageInMonths === upperPoint.ageInMonths) {
-            return lowerPoint.value;
-          }
-          const ratio = (age - lowerPoint.ageInMonths) / (upperPoint.ageInMonths - lowerPoint.ageInMonths);
-          return lowerPoint.value + ratio * (upperPoint.value - lowerPoint.value);
-        } else if (lowerPoint) {
-          // Extrapolate forward from last point (needed to extend curves to the right edge)
-          return lowerPoint.value;
-        } else if (upperPoint) {
-          // Extrapolate backward from first point (needed to extend curves to the left edge)
-          return upperPoint.value;
-        }
-        // If no data available at all, use 0 (shouldn't happen with proper CDC/WHO data)
-        return 0;
-      });
-
-      datasets.push({
-        data,
-        color: (opacity = 1) =>
-          `rgba(150, 150, 150, ${index === 2 ? 0.7 : 0.4})`, // 50th darker
-        strokeWidth: index === 2 ? 2 : 1,
-        withDots: false,
-      });
+      curve
+        .filter(point => point.ageInMonths >= minAge && point.ageInMonths <= maxAge)
+        .forEach(point => allAges.add(point.ageInMonths));
     });
 
-    // Store child measurements for decorator (we'll render dots manually)
-    let childMeasurementsForDots: Array<{age: number, value: number, index: number}> = [];
-    if (measurements.length > 0) {
-      const childDataPoints = measurements.map(m => ({
-        age: calculateAgeInMonths(child.birthDate, m.date),
-        value: m.value,
-      }));
+    // Sort all ages from percentiles
+    const sortedAges = Array.from(allAges).sort((a, b) => a - b);
 
-      // Map child data to chart indices
-      childMeasurementsForDots = childDataPoints.map(child => {
-        const index = agePoints.findIndex(age => Math.abs(age - child.age) < 1);
-        return {
-          age: child.age,
-          value: child.value,
-          index: index >= 0 ? index : -1,
-        };
-      }).filter(m => m.index >= 0);
-    }
-
-    // Create labels - show every other point for readability
-    const labels = agePoints.map((age, i) => {
-      return i % 2 === 0 ? `${Math.round(age)}` : '';
+    // Build data array with all percentiles
+    const percentileData = sortedAges.map(age => {
+      const dataPoint: any = { x: age };
+      percentilesToShow.forEach(percentile => {
+        const curve = getPercentileCurve(percentile, chartData);
+        const point = curve.find(p => Math.abs(p.ageInMonths - age) < 0.1);
+        if (point) {
+          dataPoint[`p${percentile}`] = point.value;
+        }
+      });
+      return dataPoint;
     });
+
+    // Create data points for child's measurements
+    const childMeasurementData = measurements.map(m => ({
+      x: calculateAgeInMonths(child.birthDate, m.date),
+      child: m.value,
+    }));
+
+    // Combine percentile data and child measurement data
+    const data = [...percentileData, ...childMeasurementData].sort(
+      (a, b) => a.x - b.x
+    );
 
     return {
-      labels,
-      datasets,
-      childMeasurements: childMeasurementsForDots,
+      data,
+      yKeys: ['p5', 'p25', 'p50', 'p75', 'p95', 'child'],
+      minAge,
+      maxAge,
     };
   };
 
-  const chartKitData = prepareChartData();
+  const victoryData = prepareVictoryData();
 
   // Calculate latest percentile
   let latestPercentileData = null;
@@ -319,8 +286,8 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
             try {
               await SecureStorage.deleteMeasurement(measurementId);
               await loadData();
-            } catch (error) {
-              console.error('Error deleting measurement:', error);
+            } catch (err) {
+              console.error('Error deleting measurement:', err);
               Alert.alert('Error', 'Failed to delete measurement');
             }
           },
@@ -437,125 +404,101 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.chartContainer}>
           <Text style={styles.chartTitle}>Growth Chart</Text>
 
-          {chartKitData ? (
+          {victoryData ? (
             <>
-              <View style={styles.chartWrapper}>
-                <LineChart
-                data={{
-                  labels: chartKitData.labels,
-                  datasets: chartKitData.datasets,
-                }}
-                width={chartWidth}
-                height={400}
-                yAxisSuffix="kg"
-                yAxisInterval={1}
-                fromZero={true}
-                chartConfig={{
-                  backgroundColor: 'rgba(255, 255, 255, 0)',
-                  backgroundGradientFrom: 'rgba(255, 255, 255, 0)',
-                  backgroundGradientTo: 'rgba(255, 255, 255, 0)',
-                  decimalPlaces: 1,
-                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(126, 87, 194, ${opacity * 0.8})`, // Purple labels
-                  style: {
-                    borderRadius: 0,
-                  },
-                  propsForDots: {
-                    r: '0',
-                  },
-                  propsForBackgroundLines: {
-                    strokeDasharray: '', // solid grid lines
-                    stroke: '#e0e0e0',
-                    strokeWidth: 1,
-                  },
-                  propsForLabels: {
-                    fontSize: 10,
-                    fontWeight: '600',
-                  },
-                  propsForVerticalLabels: {
-                    fontSize: 10,
-                    fontWeight: '600',
-                    fill: 'rgba(126, 87, 194, 0.9)',
-                  },
-                  propsForHorizontalLabels: {
-                    fontSize: 10,
-                    fontWeight: '600',
-                    fill: 'rgba(126, 87, 194, 0.9)',
-                  },
-                }}
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 0,
-                  paddingLeft: 0,
-                  paddingBlockStart: 0,
-                  paddingInlineStart: 0,
-                  marginLeft: -10,
-                }}
-                withVerticalLines={true}
-                withHorizontalLines={true}
-                segments={4}
-                withInnerLines={true}
-                withOuterLines={true}
-                withVerticalLabels={true}
-                withHorizontalLabels={false}
-                decorator={() => {
-                  if (!chartKitData.childMeasurements || chartKitData.childMeasurements.length === 0) {
-                    return null;
-                  }
-
-                  // Get data range for proper scaling (from 0)
-                  const allValues = chartKitData.datasets.flatMap(d => d.data.filter(v => v > 0));
-                  const maxValue = Math.max(...allValues);
-                  const minValue = 0; // Always start from 0
-                  const dataRange = maxValue - minValue;
-
-                  // Chart dimensions (react-native-chart-kit constants)
-                  const paddingLeft = 50;
-                  const paddingRight = 16;
-                  const paddingTop = 16;
-                  const paddingBottom = 40;
-                  const chartHeight = 400;
-                  const usableWidth = chartWidth - paddingLeft - paddingRight;
-                  const usableHeight = chartHeight - paddingTop - paddingBottom;
-
-                  return chartKitData.childMeasurements.map((measurement, idx) => {
-                    // Calculate x position
-                    const xRatio = measurement.index / (chartKitData.labels.length - 1);
-                    const x = paddingLeft + (xRatio * usableWidth);
-
-                    // Calculate y position (inverted because chart y=0 is at top)
-                    const yRatio = (measurement.value - minValue) / dataRange;
-                    const y = paddingTop + usableHeight - (yRatio * usableHeight);
-
-                    return (
-                      <View
-                        key={idx}
-                        style={{
-                          position: 'absolute',
-                          left: x - 6,
-                          top: y - 6,
-                          width: 12,
-                          height: 12,
-                          borderRadius: 6,
-                          backgroundColor: Colors.primary,
-                          borderWidth: 2,
-                          borderColor: '#fff',
-                        }}
+              <View style={styles.chartCanvasContainer}>
+                <CartesianChart
+                  data={victoryData.data}
+                  xKey="x"
+                  yKeys={victoryData.yKeys}
+                  axisOptions={{
+                    font,
+                    tickCount: 5,
+                    labelColor: Colors.primary,
+                    labelPosition: { x: "inset", y: "inset" },
+                    formatYLabel: (value) => `${value}`,
+                    formatXLabel: (value) => `${value}`,
+                  }}
+                  domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
+                >
+                  {({ points }) => (
+                    <>
+                      {/* Percentile curves */}
+                      <Line
+                        points={points.p5}
+                        color="#ccc"
+                        strokeWidth={1}
+                        curveType="natural"
+                        connectMissingData={true}
                       />
-                    );
-                  });
-                }}
-              />
+                      <AreaRange
+                        lowerPoints={points.p5}
+                        upperPoints={points.p25}
+                        connectMissingData={true}
+                        opacity={0.1}
+                      />
+                      <Line
+                        points={points.p25}
+                        color="#ccc"
+                        strokeWidth={1}
+                        curveType="natural"
+                        connectMissingData={true}
+                      />
+                      <AreaRange
+                        lowerPoints={points.p25}
+                        upperPoints={points.p75}
+                        connectMissingData={true}
+                        opacity={0.2}
+                      />
+                      <AreaRange
+                        lowerPoints={points.p75}
+                        upperPoints={points.p95}
+                        connectMissingData={true}
+                        opacity={0.1}
+                      />
+                      <Line
+                        points={points.p50}
+                        color="#999"
+                        strokeWidth={2}
+                        curveType="natural"
+                        connectMissingData={true}
+                      />
+                      <Line
+                        points={points.p75}
+                        color="#ccc"
+                        strokeWidth={1}
+                        curveType="natural"
+                        connectMissingData={true}
+                      />
+                      <Line
+                        points={points.p95}
+                        color="#ccc"
+                        strokeWidth={1}
+                        curveType="natural"
+                        connectMissingData={true}
+                      />
+
+                      {/* Child's measurements as scatter points */}
+                      <Scatter
+                        points={points.child}
+                        radius={6}
+                        shape="circle"
+                        style="fill"
+                        color={Colors.primary}
+                      />
+                    </>
+                  )}
+                </CartesianChart>
               </View>
               <View style={styles.legend}>
                 <Text style={styles.legendTitle}>Percentile Curves</Text>
                 <View style={styles.legendItems}>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendLine, { backgroundColor: '#aaa' }]} />
+                    <View style={styles.legendLineGray} />
                     <Text style={styles.legendText}>5th, 25th, 75th, 95th</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendLine, { backgroundColor: '#666', height: 2 }]} />
+                    <View style={styles.legendLineDarkGray} />
                     <Text style={styles.legendText}>50th (median)</Text>
                   </View>
                   <View style={styles.legendItem}>
@@ -711,21 +654,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingLeft: 16,
   },
-  chartWrapper: {
-    position: 'relative',
-  },
-  xAxisLabel: {
-    position: 'absolute',
-    bottom: 50,
-    right: 30,
-    fontSize: 11,
-    color: Colors.primary,
-    fontWeight: '600',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
   emptyChart: {
     height: 200,
     justifyContent: 'center',
@@ -769,6 +697,16 @@ const styles = StyleSheet.create({
     width: 20,
     height: 1,
     backgroundColor: '#ccc',
+  },
+  legendLineGray: {
+    width: 20,
+    height: 1,
+    backgroundColor: '#aaa',
+  },
+  legendLineDarkGray: {
+    width: 20,
+    height: 2,
+    backgroundColor: '#666',
   },
   legendCircle: {
     width: 10,
@@ -872,6 +810,10 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#666',
+  },
+  chartCanvasContainer: {
+    height: 350,
+    width: '100%',
   },
 });
 
