@@ -14,10 +14,12 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { Child, Sex } from '../types';
 import SecureStorage from '../services/SecureStorage';
+import { Colors } from '../constants/colors';
 
 interface Props {
   navigation: NativeStackNavigationProp<RootStackParamList, 'AddChild'>;
@@ -28,6 +30,11 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [sex, setSex] = useState<Sex>('male');
   const [birthDate, setBirthDate] = useState('');
   const [saving, setSaving] = useState(false);
+  const drawerNavigation = useNavigation();
+
+  const openDrawer = () => {
+    drawerNavigation.dispatch(DrawerActions.openDrawer());
+  };
 
   const handleSave = async () => {
     // Validate inputs
@@ -81,6 +88,12 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
+          <Text style={styles.menuIcon}>☰</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Add Child</Text>
+      </View>
       <View style={styles.content}>
         <Text style={styles.label}>Name</Text>
         <TextInput
@@ -164,6 +177,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  header: {
+    backgroundColor: Colors.primary,
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuButton: {
+    marginRight: 16,
+    padding: 4,
+  },
+  menuIcon: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
   content: {
     padding: 20,
   },
@@ -204,8 +239,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sexButtonSelected: {
-    borderColor: '#4A90E2',
-    backgroundColor: '#4A90E2',
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary,
   },
   sexButtonText: {
     fontSize: 16,
@@ -216,7 +251,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   saveButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

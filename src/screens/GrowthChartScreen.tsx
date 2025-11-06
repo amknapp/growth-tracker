@@ -13,7 +13,11 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { Swipeable } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { LineChart } from 'react-native-chart-kit';
 import { GrowthChartNavigationProp, GrowthChartRouteProp } from '../types/navigation';
 import { Child, Measurement, ChartStandard, GrowthChartDataPoint } from '../types';
@@ -28,14 +32,12 @@ import {
 } from '../utils/percentileCalculator';
 import { getCDCChartData } from '../data/cdcData';
 import { getWHOChartData } from '../data/whoData';
+import { Colors } from '../constants/colors';
 
 interface Props {
   navigation: GrowthChartNavigationProp;
   route: GrowthChartRouteProp;
 }
-
-const { width } = Dimensions.get('window');
-const chartWidth = width - 64; // Account for container padding + label space
 
 const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
   const { childId, measurementType } = route.params;
@@ -47,6 +49,20 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const [loadingChart, setLoadingChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 32);
+  const drawerNavigation = useNavigation();
+
+  const openDrawer = () => {
+    drawerNavigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setChartWidth(window.width - 32);
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -203,10 +219,13 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
           const ratio = (age - lowerPoint.ageInMonths) / (upperPoint.ageInMonths - lowerPoint.ageInMonths);
           return lowerPoint.value + ratio * (upperPoint.value - lowerPoint.value);
         } else if (lowerPoint) {
+          // Extrapolate forward from last point (needed to extend curves to the right edge)
           return lowerPoint.value;
         } else if (upperPoint) {
+          // Extrapolate backward from first point (needed to extend curves to the left edge)
           return upperPoint.value;
         }
+        // If no data available at all, use 0 (shouldn't happen with proper CDC/WHO data)
         return 0;
       });
 
@@ -284,12 +303,70 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
     return measurementType === 'weight' ? 'kg' : 'cm';
   };
 
+  const handleDeleteMeasurement = (measurementId: string) => {
+    Alert.alert(
+      'Delete Measurement',
+      'Are you sure you want to delete this measurement?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await SecureStorage.deleteMeasurement(measurementId);
+              await loadData();
+            } catch (error) {
+              console.error('Error deleting measurement:', error);
+              Alert.alert('Error', 'Failed to delete measurement');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+    measurementId: string
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <View style={styles.deleteButtonContainer}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteMeasurement(measurementId)}
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Icon name="delete" size={28} color="#fff" />
+          </Animated.View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>
-          {child.name} - {getMeasurementLabel()}
-        </Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
+            <Text style={styles.menuIcon}>☰</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.title}>
+              {child.name} - {getMeasurementLabel()}
+            </Text>
+          </View>
+        </View>
 
         <View style={styles.standardToggle}>
           <TouchableOpacity
@@ -362,38 +439,65 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
 
           {chartKitData ? (
             <>
-              <LineChart
+              <View style={styles.chartWrapper}>
+                <LineChart
                 data={{
                   labels: chartKitData.labels,
                   datasets: chartKitData.datasets,
                 }}
                 width={chartWidth}
                 height={400}
-                yAxisSuffix=""
+                yAxisSuffix="kg"
                 yAxisInterval={1}
                 fromZero={true}
                 chartConfig={{
-                  backgroundColor: '#ffffff',
-                  backgroundGradientFrom: '#ffffff',
-                  backgroundGradientTo: '#ffffff',
+                  backgroundColor: 'rgba(255, 255, 255, 0)',
+                  backgroundGradientFrom: 'rgba(255, 255, 255, 0)',
+                  backgroundGradientTo: 'rgba(255, 255, 255, 0)',
                   decimalPlaces: 1,
                   color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(126, 87, 194, ${opacity * 0.8})`, // Purple labels
                   style: {
-                    borderRadius: 16,
+                    borderRadius: 0,
                   },
                   propsForDots: {
                     r: '0',
                   },
+                  propsForBackgroundLines: {
+                    strokeDasharray: '', // solid grid lines
+                    stroke: '#e0e0e0',
+                    strokeWidth: 1,
+                  },
+                  propsForLabels: {
+                    fontSize: 10,
+                    fontWeight: '600',
+                  },
+                  propsForVerticalLabels: {
+                    fontSize: 10,
+                    fontWeight: '600',
+                    fill: 'rgba(126, 87, 194, 0.9)',
+                  },
+                  propsForHorizontalLabels: {
+                    fontSize: 10,
+                    fontWeight: '600',
+                    fill: 'rgba(126, 87, 194, 0.9)',
+                  },
                 }}
                 style={{
                   marginVertical: 8,
-                  borderRadius: 16,
+                  borderRadius: 0,
+                  paddingLeft: 0,
+                  paddingBlockStart: 0,
+                  paddingInlineStart: 0,
+                  marginLeft: -10,
                 }}
+                withVerticalLines={true}
+                withHorizontalLines={true}
+                segments={4}
                 withInnerLines={true}
                 withOuterLines={true}
                 withVerticalLabels={true}
-                withHorizontalLabels={true}
+                withHorizontalLabels={false}
                 decorator={() => {
                   if (!chartKitData.childMeasurements || chartKitData.childMeasurements.length === 0) {
                     return null;
@@ -433,7 +537,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
                           width: 12,
                           height: 12,
                           borderRadius: 6,
-                          backgroundColor: '#4A90E2',
+                          backgroundColor: Colors.primary,
                           borderWidth: 2,
                           borderColor: '#fff',
                         }}
@@ -442,7 +546,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
                   });
                 }}
               />
-              <Text style={styles.xAxisLabel}>Age (months)</Text>
+              </View>
               <View style={styles.legend}>
                 <Text style={styles.legendTitle}>Percentile Curves</Text>
                 <View style={styles.legendItems}>
@@ -478,12 +582,20 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.measurementsList}>
           <Text style={styles.measurementsTitle}>All Measurements</Text>
           {measurements.map(m => (
-            <View key={m.id} style={styles.measurementItem}>
-              <Text style={styles.measurementDate}>{m.date}</Text>
-              <Text style={styles.measurementValue}>
-                {m.value.toFixed(1)} {getYAxisLabel()}
-              </Text>
-            </View>
+            <Swipeable
+              key={m.id}
+              renderRightActions={(progress, dragX) =>
+                renderRightActions(progress, dragX, m.id)
+              }
+              overshootRight={false}
+            >
+              <View style={styles.measurementItem}>
+                <Text style={styles.measurementDate}>{m.date}</Text>
+                <Text style={styles.measurementValue}>
+                  {m.value.toFixed(1)} {getYAxisLabel()}
+                </Text>
+              </View>
+            </Swipeable>
           ))}
         </View>
       )}
@@ -497,15 +609,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.primary,
     padding: 20,
     paddingTop: 60,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  menuButton: {
+    marginRight: 12,
+    padding: 4,
+  },
+  menuIcon: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  headerTitleContainer: {
+    flex: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 16,
   },
   standardToggle: {
     flexDirection: 'row',
@@ -529,7 +657,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   standardButtonTextSelected: {
-    color: '#4A90E2',
+    color: Colors.primary,
   },
   statsCard: {
     backgroundColor: '#fff',
@@ -555,7 +683,7 @@ const styles = StyleSheet.create({
   },
   statsPercentile: {
     fontSize: 18,
-    color: '#4A90E2',
+    color: Colors.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
@@ -567,7 +695,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     margin: 16,
     marginTop: 0,
-    padding: 16,
+    paddingVertical: 16,
+    paddingRight: 16,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -580,12 +709,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 12,
+    paddingLeft: 16,
+  },
+  chartWrapper: {
+    position: 'relative',
   },
   xAxisLabel: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 8,
+    position: 'absolute',
+    bottom: 50,
+    right: 30,
+    fontSize: 11,
+    color: Colors.primary,
+    fontWeight: '600',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   emptyChart: {
     height: 200,
@@ -604,14 +743,17 @@ const styles = StyleSheet.create({
   legend: {
     marginTop: 16,
     paddingTop: 16,
+    paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
   },
   legendTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
+    color: Colors.primary,
     marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   legendItems: {
     flexDirection: 'row',
@@ -632,7 +774,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.primary,
   },
   legendText: {
     fontSize: 12,
@@ -659,7 +801,9 @@ const styles = StyleSheet.create({
   measurementItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
@@ -671,6 +815,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
+  },
+  deleteButtonContainer: {
+    justifyContent: 'center',
+  },
+  deleteButton: {
+    backgroundColor: Colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+    borderRadius: 0,
   },
   errorText: {
     fontSize: 16,

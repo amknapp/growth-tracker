@@ -3,7 +3,14 @@
  */
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RouteProp } from '@react-navigation/native';
+
+export type DrawerParamList = {
+  HomeStack: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfService: undefined;
+};
 
 export type RootStackParamList = {
   Home: undefined;
@@ -12,6 +19,8 @@ export type RootStackParamList = {
   AddMeasurement: { childId: string };
   GrowthChart: { childId: string; measurementType: string };
 };
+
+export type DrawerNavigationPropType = DrawerNavigationProp<DrawerParamList>;
 
 export type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

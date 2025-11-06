@@ -11,12 +11,16 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { Swipeable } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useFocusEffect, useNavigation, DrawerActions } from '@react-navigation/native';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { Child } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { getCurrentAge, formatAge } from '../utils/ageCalculator';
+import { Colors } from '../constants/colors';
 
 interface Props {
   navigation: HomeScreenNavigationProp;
@@ -25,6 +29,7 @@ interface Props {
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
+  const drawerNavigation = useNavigation();
 
   const loadChildren = async () => {
     try {
@@ -52,23 +57,82 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('ChildProfile', { childId });
   };
 
+  const handleDeleteChild = (childId: string, childName: string) => {
+    Alert.alert(
+      'Delete Child',
+      `Are you sure you want to delete ${childName}? This will also delete all their measurements.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await SecureStorage.deleteChild(childId);
+              await loadChildren();
+            } catch (error) {
+              console.error('Error deleting child:', error);
+              Alert.alert('Error', 'Failed to delete child profile');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+    childId: string,
+    childName: string
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <View style={styles.deleteButtonContainer}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteChild(childId, childName)}
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Icon name="delete" size={28} color="#fff" />
+          </Animated.View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderChildItem = ({ item }: { item: Child }) => {
     const age = getCurrentAge(item.birthDate);
     const ageText = formatAge(age);
 
     return (
-      <TouchableOpacity
-        style={styles.childCard}
-        onPress={() => handleChildPress(item.id)}
+      <Swipeable
+        renderRightActions={(progress, dragX) =>
+          renderRightActions(progress, dragX, item.id, item.name)
+        }
+        overshootRight={false}
       >
-        <View style={styles.childInfo}>
-          <Text style={styles.childName}>{item.name}</Text>
-          <Text style={styles.childDetails}>
-            {item.sex === 'male' ? 'Boy' : 'Girl'} • {ageText}
-          </Text>
-        </View>
-        <Text style={styles.chevron}>›</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.childCard}
+          onPress={() => handleChildPress(item.id)}
+        >
+          <View style={styles.childInfo}>
+            <Text style={styles.childName}>{item.name}</Text>
+            <Text style={styles.childDetails}>
+              {item.sex === 'male' ? 'Boy' : 'Girl'} • {ageText}
+            </Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
+      </Swipeable>
     );
   };
 
@@ -81,9 +145,19 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
+  const openDrawer = () => {
+    drawerNavigation.dispatch(DrawerActions.openDrawer());
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={openDrawer}
+        >
+          <Text style={styles.menuIcon}>☰</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>Growth Tracker</Text>
       </View>
 
@@ -108,10 +182,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.primary,
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuButton: {
+    marginRight: 16,
+    padding: 4,
+  },
+  menuIcon: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 28,
@@ -173,7 +258,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   addButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -189,6 +274,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  deleteButtonContainer: {
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  deleteButton: {
+    backgroundColor: Colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+    borderRadius: 12,
   },
 });
 

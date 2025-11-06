@@ -11,12 +11,16 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { Swipeable } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useFocusEffect, useNavigation, DrawerActions } from '@react-navigation/native';
 import { ChildProfileNavigationProp, ChildProfileRouteProp } from '../types/navigation';
 import { Child, Measurement } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { getCurrentAge, formatAge } from '../utils/ageCalculator';
+import { Colors } from '../constants/colors';
 
 interface Props {
   navigation: ChildProfileNavigationProp;
@@ -28,6 +32,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const [child, setChild] = useState<Child | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [loading, setLoading] = useState(true);
+  const drawerNavigation = useNavigation();
 
   const loadData = async () => {
     try {
@@ -78,10 +83,75 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const age = getCurrentAge(child.birthDate);
   const ageText = formatAge(age);
 
+  const openDrawer = () => {
+    drawerNavigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  const handleDeleteMeasurement = (measurementId: string) => {
+    Alert.alert(
+      'Delete Measurement',
+      'Are you sure you want to delete this measurement?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await SecureStorage.deleteMeasurement(measurementId);
+              await loadData();
+            } catch (error) {
+              console.error('Error deleting measurement:', error);
+              Alert.alert('Error', 'Failed to delete measurement');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+    measurementId: string
+  ) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <View style={styles.deleteButtonContainer}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteMeasurement(measurementId)}
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Icon name="delete" size={28} color="#fff" />
+          </Animated.View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.name}>{child.name}</Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={openDrawer}
+          >
+            <Text style={styles.menuIcon}>☰</Text>
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.name}>{child.name}</Text>
+          </View>
+        </View>
         <Text style={styles.details}>
           {child.sex === 'male' ? 'Boy' : 'Girl'} • {ageText}
         </Text>
@@ -147,23 +217,31 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.emptyText}>No measurements yet</Text>
         ) : (
           measurements.map(measurement => (
-            <View key={measurement.id} style={styles.historyCard}>
-              <Text style={styles.historyDate}>{measurement.date}</Text>
-              <Text style={styles.historyType}>
-                {measurement.type === 'weight'
-                  ? 'Weight'
-                  : measurement.type === 'height'
-                  ? 'Height'
-                  : 'Head Circumference'}
-              </Text>
-              <Text style={styles.historyValue}>
-                {measurement.value.toFixed(1)}{' '}
-                {measurement.type === 'weight' ? 'kg' : 'cm'}
-              </Text>
-              {measurement.notes && (
-                <Text style={styles.historyNotes}>{measurement.notes}</Text>
-              )}
-            </View>
+            <Swipeable
+              key={measurement.id}
+              renderRightActions={(progress, dragX) =>
+                renderRightActions(progress, dragX, measurement.id)
+              }
+              overshootRight={false}
+            >
+              <View style={styles.historyCard}>
+                <Text style={styles.historyDate}>{measurement.date}</Text>
+                <Text style={styles.historyType}>
+                  {measurement.type === 'weight'
+                    ? 'Weight'
+                    : measurement.type === 'height'
+                    ? 'Height'
+                    : 'Head Circumference'}
+                </Text>
+                <Text style={styles.historyValue}>
+                  {measurement.value.toFixed(1)}{' '}
+                  {measurement.type === 'weight' ? 'kg' : 'cm'}
+                </Text>
+                {measurement.notes && (
+                  <Text style={styles.historyNotes}>{measurement.notes}</Text>
+                )}
+              </View>
+            </Swipeable>
           ))
         )}
       </View>
@@ -177,15 +255,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.primary,
     padding: 20,
     paddingTop: 60,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  menuButton: {
+    padding: 4,
+    marginRight: 12,
+  },
+  menuIcon: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  headerTitleContainer: {
+    flex: 1,
   },
   name: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
   },
   details: {
     fontSize: 16,
@@ -238,7 +332,7 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   addButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -275,7 +369,7 @@ const styles = StyleSheet.create({
   },
   historyValue: {
     fontSize: 16,
-    color: '#4A90E2',
+    color: Colors.primary,
     fontWeight: '500',
   },
   historyNotes: {
@@ -295,6 +389,18 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 100,
+  },
+  deleteButtonContainer: {
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  deleteButton: {
+    backgroundColor: Colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+    borderRadius: 8,
   },
 });
 
