@@ -321,8 +321,8 @@ class CDCDataService {
   private mergeDatasets(infant: GrowthChartDataPoint[], child: GrowthChartDataPoint[]): GrowthChartDataPoint[] {
     // Use infant data up to 36 months, then child data for 36+ months
     // This avoids duplicates in the 24-36 month overlap
-    const infantData = infant.filter(p => p.ageInMonths <= 36);
-    const childData = child.filter(p => p.ageInMonths > 36);
+    const infantData = (infant || []).filter(p => p.ageInMonths <= 36);
+    const childData = (child || []).filter(p => p.ageInMonths > 36);
     return [...infantData, ...childData].sort((a, b) => a.ageInMonths - b.ageInMonths);
   }
 

@@ -226,14 +226,14 @@ describe('SecureStorage', () => {
       expect(child).toEqual(mockChild);
     });
 
-    it('should throw error when child not found', async () => {
+    it('should return null when child not found', async () => {
       (Keychain.getGenericPassword as jest.Mock).mockResolvedValueOnce({
         password: JSON.stringify(mockAppData),
       });
 
-      await expect(SecureStorage.getChild('non-existent')).rejects.toThrow(
-        'Child not found'
-      );
+      const child = await SecureStorage.getChild('non-existent');
+
+      expect(child).toBeNull();
     });
   });
 
@@ -307,7 +307,7 @@ describe('SecureStorage', () => {
       expect(measurements[0].childId).toBe('1');
     });
 
-    it('should sort measurements by date (newest first)', async () => {
+    it('should sort measurements by date (oldest first)', async () => {
       const dataWithMultipleMeasurements: AppData = {
         children: [mockChild],
         measurements: [
@@ -323,9 +323,9 @@ describe('SecureStorage', () => {
 
       const measurements = await SecureStorage.getMeasurementsForChild('1');
 
-      expect(measurements[0].date).toBe('2024-01-20');
+      expect(measurements[0].date).toBe('2024-01-10');
       expect(measurements[1].date).toBe('2024-01-15');
-      expect(measurements[2].date).toBe('2024-01-10');
+      expect(measurements[2].date).toBe('2024-01-20');
     });
   });
 

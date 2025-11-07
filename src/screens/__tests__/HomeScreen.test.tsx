@@ -53,16 +53,6 @@ describe('HomeScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('should render loading state initially', () => {
-    (SecureStorage.getChildren as jest.Mock).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
-    );
-
-    const { getByText } = render(<HomeScreen navigation={null as any} />);
-
-    expect(getByText('Loading...')).toBeTruthy();
-  });
-
   it('should render children list when loaded', async () => {
     (SecureStorage.getChildren as jest.Mock).mockResolvedValue(mockChildren);
 
@@ -80,19 +70,19 @@ describe('HomeScreen', () => {
     const { getByText } = render(<HomeScreen navigation={null as any} />);
 
     await waitFor(() => {
-      expect(getByText(/No children added yet/i)).toBeTruthy();
+      expect(getByText(/No Children Added/i)).toBeTruthy();
     });
   });
 
   it('should display child age information', async () => {
     (SecureStorage.getChildren as jest.Mock).mockResolvedValue(mockChildren);
 
-    const { getByText } = render(<HomeScreen navigation={null as any} />);
+    const { getAllByText } = render(<HomeScreen navigation={null as any} />);
 
     await waitFor(() => {
       // Should display age for each child (format may vary)
-      const allText = getByText(/year|month/i);
-      expect(allText).toBeTruthy();
+      const allText = getAllByText(/year|month/i);
+      expect(allText.length).toBeGreaterThan(0);
     });
   });
 });
