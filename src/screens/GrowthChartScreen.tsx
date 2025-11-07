@@ -3,7 +3,7 @@
  * Displays growth chart with percentile curves and child's data
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -51,7 +51,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
   const [error, setError] = useState<string | null>(null);
   const [_chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 16);
   const drawerNavigation = useNavigation();
-  const font = matchFont({fontFamily: "sans-serif", fontSize: 10});
+  const font = useMemo(() => matchFont({fontFamily: "sans-serif", fontSize: 10}), []);
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
@@ -67,13 +67,13 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
 
   useEffect(() => {
     loadData();
-  }, [childId, measurementType, loadData]);
+  }, [childId, measurementType]);
 
   useEffect(() => {
     if (child) {
       loadChartData();
     }
-  }, [child, chartStandard, measurementType, loadChartData]);
+  }, [child, chartStandard, measurementType]);
 
   const loadData = useCallback(async () => {
     try {
@@ -142,26 +142,9 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
     }
   }, [child, chartStandard, measurementType]);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A90E2" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (!child) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Data not found</Text>
-      </View>
-    );
-  }
-
-  // Prepare chart data for Victory
-  const prepareVictoryData = () => {
-    if (chartData.length === 0) {
+  // Prepare chart data for Victory - MUST be before early returns
+  const prepareVictoryData = useCallback(() => {
+    if (!child || chartData.length === 0) {
       return null;
     }
 
@@ -234,9 +217,26 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
       minAge,
       maxAge,
     };
-  };
+  }, [child, chartData, measurements]);
 
-  const victoryData = prepareVictoryData();
+  const victoryData = useMemo(() => prepareVictoryData(), [prepareVictoryData]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!child) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Data not found</Text>
+      </View>
+    );
+  }
 
   // Calculate latest percentile
   let latestPercentileData = null;
@@ -412,7 +412,6 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
                   xKey="x"
                   yKeys={victoryData.yKeys}
                   axisOptions={{
-                    font,
                     tickCount: 5,
                     labelColor: Colors.primary,
                     labelPosition: { x: "inset", y: "inset" },
