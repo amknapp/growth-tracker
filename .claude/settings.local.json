@@ -8,7 +8,9 @@
       "WebFetch(domain:ftp.cdc.gov)",
       "Bash(curl:*)",
       "Bash(npm run lint:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(cat:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
