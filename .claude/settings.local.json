@@ -6,7 +6,9 @@
       "Bash(git commit:*)",
       "WebFetch(domain:www.cdc.gov)",
       "WebFetch(domain:ftp.cdc.gov)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

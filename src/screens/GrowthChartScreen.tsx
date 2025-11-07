@@ -32,7 +32,6 @@ import {
 import { getCDCChartData } from '../data/cdcData';
 import { getWHOChartData } from '../data/whoData';
 import { Colors } from '../constants/colors';
-import { matchFont } from '@shopify/react-native-skia';
 
 interface Props {
   navigation: GrowthChartNavigationProp;
@@ -51,7 +50,6 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
   const [error, setError] = useState<string | null>(null);
   const [_chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 16);
   const drawerNavigation = useNavigation();
-  const font = useMemo(() => matchFont({fontFamily: "sans-serif", fontSize: 10}), []);
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
@@ -64,16 +62,6 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
 
     return () => subscription?.remove();
   }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [childId, measurementType]);
-
-  useEffect(() => {
-    if (child) {
-      loadChartData();
-    }
-  }, [child, chartStandard, measurementType]);
 
   const loadData = useCallback(async () => {
     try {
@@ -141,6 +129,16 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
       setLoadingChart(false);
     }
   }, [child, chartStandard, measurementType]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    if (child) {
+      loadChartData();
+    }
+  }, [child, loadChartData]);
 
   // Prepare chart data for Victory - MUST be before early returns
   const prepareVictoryData = useCallback(() => {

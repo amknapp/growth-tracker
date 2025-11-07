@@ -31,10 +31,10 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const { childId } = route.params;
   const [child, setChild] = useState<Child | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const drawerNavigation = useNavigation();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const childData = await SecureStorage.getChild(childId);
       const measurementsData = await SecureStorage.getMeasurementsForChild(childId);
@@ -47,12 +47,12 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [childId]);
 
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [childId])
+    }, [loadData])
   );
 
   const handleAddMeasurement = () => {

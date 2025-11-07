@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -72,14 +72,16 @@ function HomeStack() {
   );
 }
 
+const DrawerContent = (props: any) => <CustomDrawerContent {...props} />;
+
 function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
         <NavigationContainer>
           <Drawer.Navigator
-            drawerContent={(props) => <CustomDrawerContent {...props} />}
+            drawerContent={DrawerContent}
             screenOptions={{
               drawerStyle: {
                 width: 280,
@@ -129,5 +131,11 @@ function App() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default App;
