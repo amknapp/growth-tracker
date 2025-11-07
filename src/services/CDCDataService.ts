@@ -113,6 +113,32 @@ class CDCDataService {
   }
 
   /**
+   * Parse WHO CSV data (single gender per file)
+   */
+  private parseWHOData(data: any[]): GrowthChartDataPoint[] {
+    const points: GrowthChartDataPoint[] = [];
+
+    data.forEach((row: any) => {
+      // WHO files use "Month" instead of "Agemos"
+      const ageInMonths = row.Month !== undefined ? row.Month : row.month;
+
+      if (ageInMonths === undefined || ageInMonths === null) return; // Skip invalid rows
+
+      points.push({
+        ageInMonths: ageInMonths,
+        L: row.L,
+        M: row.M,
+        S: row.S,
+      });
+    });
+
+    // Sort by age
+    points.sort((a, b) => a.ageInMonths - b.ageInMonths);
+
+    return points;
+  }
+
+  /**
    * Check if cached data is still valid
    */
   private async isCacheValid(cacheKey: string): Promise<boolean> {
@@ -194,6 +220,44 @@ class CDCDataService {
       return parsedData;
     } catch (error) {
       console.error('Error fetching remote data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch WHO data from remote URL (single gender per file)
+   */
+  private async fetchWHORemoteData(url: string): Promise<GrowthChartDataPoint[]> {
+    try {
+      // Fetch CSV file from CDC FTP
+      console.log(`Fetching WHO data from: ${url}`);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get CSV text
+      const csvText = await response.text();
+
+      // Parse CSV using PapaParse
+      const results = Papa.parse(csvText, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+      });
+
+      if (results.errors && results.errors.length > 0) {
+        console.warn('CSV parsing warnings:', results.errors);
+      }
+
+      // Transform and return data
+      const parsedData = this.parseWHOData(results.data);
+      console.log(`Successfully fetched and parsed WHO data: ${parsedData.length} data points`);
+
+      return parsedData;
+    } catch (error) {
+      console.error('Error fetching WHO remote data:', error);
       throw error;
     }
   }
@@ -329,16 +393,16 @@ class CDCDataService {
           }
         }
 
-        // Fetch both boys and girls data
+        // Fetch both boys and girls data using WHO-specific parser
         console.log(`Fetching WHO data from ${boysUrl} and ${girlsUrl}`);
         const [boysData, girlsData] = await Promise.all([
-          this.fetchRemoteData(boysUrl),
-          this.fetchRemoteData(girlsUrl),
+          this.fetchWHORemoteData(boysUrl),
+          this.fetchWHORemoteData(girlsUrl),
         ]);
 
         const combined: CDCDataCache = {
-          male: boysData.male.length > 0 ? boysData.male : boysData.female, // WHO files only have one sex per file
-          female: girlsData.male.length > 0 ? girlsData.male : girlsData.female,
+          male: boysData,
+          female: girlsData,
           lastUpdate: Date.now(),
         };
 
@@ -367,34 +431,34 @@ class CDCDataService {
   }
 
   /**
-   * Get WHO Weight-for-Age data (birth to 60 months)
+   * Get WHO Weight-for-Age data (birth to 24 months)
    */
   async getWHOWeightForAgeData(): Promise<CDCDataCache> {
     return this.getWHOData(
-      'https://www.cdc.gov/growthcharts/data/who/wfa_boys_z_who.txt',
-      'https://www.cdc.gov/growthcharts/data/who/wfa_girls_z_who.txt',
+      'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Weight-for-age-Percentiles.csv',
+      'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Weight-for-age%20Percentiles.csv',
       CACHE_KEYS.WHO_WEIGHT_FOR_AGE_INFANT
     );
   }
 
   /**
-   * Get WHO Length-for-Age data (birth to 60 months)
+   * Get WHO Length-for-Age data (birth to 24 months)
    */
   async getWHOLengthForAgeData(): Promise<CDCDataCache> {
     return this.getWHOData(
-      'https://www.cdc.gov/growthcharts/data/who/lfa_boys_z_who.txt',
-      'https://www.cdc.gov/growthcharts/data/who/lfa_girls_z_who.txt',
+      'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Length-for-age-Percentiles.csv',
+      'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Length-for-age-Percentiles.csv',
       CACHE_KEYS.WHO_LENGTH_FOR_AGE_INFANT
     );
   }
 
   /**
-   * Get WHO Head Circumference-for-Age data (birth to 60 months)
+   * Get WHO Head Circumference-for-Age data (birth to 24 months)
    */
   async getWHOHeadCircForAgeData(): Promise<CDCDataCache> {
     return this.getWHOData(
-      'https://www.cdc.gov/growthcharts/data/who/hcfa_boys_z_who.txt',
-      'https://www.cdc.gov/growthcharts/data/who/hcfa_girls_z_who.txt',
+      'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Head-Circumference-for-age-Percentiles.csv',
+      'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Head-Circumference-for-age-Percentiles.csv',
       CACHE_KEYS.WHO_HEAD_CIRC_FOR_AGE
     );
   }
@@ -444,12 +508,18 @@ class CDCDataService {
         CACHE_KEYS.HEIGHT_FOR_AGE_CHILD,
         CACHE_KEYS.HEAD_CIRC_FOR_AGE,
         CACHE_KEYS.BMI_FOR_AGE,
+        CACHE_KEYS.WHO_WEIGHT_FOR_AGE_INFANT,
+        CACHE_KEYS.WHO_LENGTH_FOR_AGE_INFANT,
+        CACHE_KEYS.WHO_HEAD_CIRC_FOR_AGE,
         CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.WEIGHT_FOR_AGE_INFANT,
         CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.WEIGHT_FOR_AGE_CHILD,
         CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.HEIGHT_FOR_AGE_INFANT,
         CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.HEIGHT_FOR_AGE_CHILD,
         CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.HEAD_CIRC_FOR_AGE,
         CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.BMI_FOR_AGE,
+        CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.WHO_WEIGHT_FOR_AGE_INFANT,
+        CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.WHO_LENGTH_FOR_AGE_INFANT,
+        CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.WHO_HEAD_CIRC_FOR_AGE,
       ]);
     } catch (error) {
       console.error('Error clearing cache:', error);
