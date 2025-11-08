@@ -30,8 +30,9 @@ See our [Privacy Policy](src/content/privacyPolicy.ts) for full details.
 
 ## Installation
 
-### Google Play Store
-Coming soon!
+### App Stores
+- **Google Play Store**: Coming soon!
+- **Apple App Store**: Coming soon!
 
 ### Build from Source
 
@@ -126,7 +127,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Release Process
 
-See [RELEASE_SETUP.md](RELEASE_SETUP.md) for detailed instructions on publishing to Google Play Store.
+Automated releases to both Google Play Store and Apple App Store:
+
+- **Android**: See [RELEASE_SETUP.md](RELEASE_SETUP.md) for Google Play Store setup
+- **iOS**: See [IOS_RELEASE_SETUP.md](IOS_RELEASE_SETUP.md) for App Store setup
 
 Quick release:
 ```bash
@@ -136,7 +140,9 @@ npm run version:patch  # or version:minor, version:major
 # Push with tags
 git push origin mainline --tags
 
-# GitHub Actions will automatically build and release
+# GitHub Actions will automatically:
+# - Build Android AAB/APK and upload to Google Play
+# - Build iOS IPA and upload to App Store Connect
 ```
 
 ## License
