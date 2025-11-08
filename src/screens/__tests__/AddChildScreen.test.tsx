@@ -164,7 +164,7 @@ describe('AddChildScreen', () => {
   it('should save child successfully', async () => {
     (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = render(
       <AddChildScreen navigation={mockNavigation} />
     );
 
@@ -191,12 +191,17 @@ describe('AddChildScreen', () => {
         expect.any(Array)
       );
     });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
+    });
   });
 
   it('should save child with female sex', async () => {
     (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = render(
       <AddChildScreen navigation={mockNavigation} />
     );
 
@@ -219,6 +224,11 @@ describe('AddChildScreen', () => {
           sex: 'female',
         })
       );
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
     });
   });
 
@@ -267,7 +277,7 @@ describe('AddChildScreen', () => {
   it('should trim whitespace from name', async () => {
     (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = render(
       <AddChildScreen navigation={mockNavigation} />
     );
 
@@ -287,6 +297,11 @@ describe('AddChildScreen', () => {
         })
       );
     });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
+    });
   });
 
   it('should disable save button while saving', async () => {
@@ -294,7 +309,7 @@ describe('AddChildScreen', () => {
       () => new Promise(resolve => setTimeout(resolve, 100))
     );
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = render(
       <AddChildScreen navigation={mockNavigation} />
     );
 
@@ -310,6 +325,11 @@ describe('AddChildScreen', () => {
     // Button should show "Saving..."
     await waitFor(() => {
       expect(getByText('Saving...')).toBeTruthy();
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
     });
   });
 });
