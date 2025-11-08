@@ -1,97 +1,157 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# GrowthTracker
 
-# Getting Started
+A privacy-focused React Native app for tracking children's growth and development using CDC and WHO growth charts.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+![CI](https://github.com/amknapp/growth-tracker/workflows/CI/badge.svg)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-## Step 1: Start Metro
+## Features
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- 📊 **Growth Charts**: Track weight, height, and head circumference using official CDC and WHO standards
+- 🔒 **Privacy-First**: All data stored locally with device-level encryption (Keychain/Keystore)
+- 📱 **Offline-First**: Works completely offline, no internet required
+- 📈 **Percentile Tracking**: Visualize your child's growth against population percentiles
+- 🌐 **Multiple Children**: Track multiple children with individual profiles
+- 📝 **Measurement History**: Record and view historical measurements
+- 🔐 **Secure Storage**: AES-256 encryption on iOS, hardware-backed encryption on Android
+- 🚫 **Zero Data Collection**: No servers, no analytics, no tracking
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## Privacy
 
-```sh
-# Using npm
-npm start
+GrowthTracker is designed with privacy as a core principle:
 
-# OR using Yarn
-yarn start
-```
+- **No servers**: We don't operate any servers
+- **No analytics**: We don't track usage
+- **No third-party services**: Your data stays on your device
+- **No accounts**: No registration required
+- **Works offline**: No internet connection needed
 
-## Step 2: Build and run your app
+See our [Privacy Policy](src/content/privacyPolicy.ts) for full details.
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+## Installation
 
-### Android
+### Google Play Store
+Coming soon!
 
-```sh
-# Using npm
+### Build from Source
+
+#### Prerequisites
+- Node.js 20+
+- React Native development environment ([setup guide](https://reactnative.dev/docs/environment-setup))
+- For Android: Android Studio, Java 17
+- For iOS: Xcode, CocoaPods (macOS only)
+
+#### Steps
+
+```bash
+# Clone the repository
+git clone https://github.com/amknapp/growth-tracker.git
+cd growth-tracker
+
+# Install dependencies
+npm install
+
+# For iOS (macOS only)
+cd ios && pod install && cd ..
+
+# Run on Android
 npm run android
 
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+# Run on iOS (macOS only)
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Development
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+### Running Tests
 
-## Step 3: Modify your app
+```bash
+# Run all tests
+npm test
 
-Now that you have successfully run the app, let's make changes!
+# Run tests with coverage
+npm test -- --coverage
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+# Run linter
+npm run lint
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+# Run TypeScript check
+npx tsc --noEmit
+```
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### Project Structure
 
-## Congratulations! :tada:
+```
+src/
+├── components/       # Reusable UI components
+├── content/          # Static content (privacy policy, etc.)
+├── navigators/       # Navigation configuration
+├── screens/          # Screen components
+├── services/         # Business logic and data services
+│   ├── CDCDataService.ts      # Growth chart data fetching
+│   └── SecureStorage.ts       # Encrypted local storage
+├── types/            # TypeScript type definitions
+└── utils/            # Utility functions
+    ├── ageCalculator.ts       # Age calculation helpers
+    └── percentileCalculator.ts # Growth percentile calculations
+```
 
-You've successfully run and modified your React Native App. :partying_face:
+### Technology Stack
 
-### Now what?
+- **React Native 0.81** - Cross-platform mobile framework
+- **TypeScript** - Type safety
+- **React Navigation** - Navigation
+- **Victory Native** - Charts and visualizations
+- **React Native Keychain** - Secure storage
+- **AsyncStorage** - Local data persistence
+- **Jest** - Testing framework
+- **ESLint** - Code linting
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+## Contributing
 
-# Troubleshooting
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-# Learn More
+### Code Quality
 
-To learn more about React Native, take a look at the following resources:
+- All tests must pass
+- Code must pass ESLint checks
+- TypeScript must compile without errors
+- Maintain test coverage above 80%
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## Release Process
+
+See [RELEASE_SETUP.md](RELEASE_SETUP.md) for detailed instructions on publishing to Google Play Store.
+
+Quick release:
+```bash
+# Bump version and create tag
+npm run version:patch  # or version:minor, version:major
+
+# Push with tags
+git push origin mainline --tags
+
+# GitHub Actions will automatically build and release
+```
+
+## License
+
+This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Growth chart data provided by the [Centers for Disease Control and Prevention (CDC)](https://www.cdc.gov/growthcharts/)
+- WHO growth standards from the [World Health Organization](https://www.who.int/tools/child-growth-standards)
+
+## Support
+
+For issues, questions, or suggestions, please [open an issue](https://github.com/amknapp/growth-tracker/issues) on GitHub.
+
+## Disclaimer
+
+This app is for informational purposes only and should not replace professional medical advice. Always consult with a healthcare provider regarding your child's growth and development.
