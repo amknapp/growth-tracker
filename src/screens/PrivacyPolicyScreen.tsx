@@ -13,6 +13,21 @@ import {
 import { privacyPolicyContent } from '../content/privacyPolicy';
 
 const PrivacyPolicyScreen: React.FC = () => {
+  // Helper function to render text with inline bold formatting
+  const renderTextWithBold = (text: string, baseStyle: any) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <Text key={i} style={[baseStyle, styles.boldInline]}>
+            {part.replace(/\*\*/g, '')}
+          </Text>
+        );
+      }
+      return <Text key={i} style={baseStyle}>{part}</Text>;
+    });
+  };
+
   // Parse markdown-style content for simple rendering
   const renderContent = () => {
     const lines = privacyPolicyContent.split('\n');
@@ -39,7 +54,7 @@ const PrivacyPolicyScreen: React.FC = () => {
           </Text>
         );
       }
-      // Bold text
+      // Bold text (full line)
       if (line.startsWith('**') && line.endsWith('**')) {
         return (
           <Text key={index} style={styles.bold}>
@@ -47,11 +62,12 @@ const PrivacyPolicyScreen: React.FC = () => {
           </Text>
         );
       }
-      // Bullet points
+      // Bullet points (with possible inline bold)
       if (line.startsWith('- ')) {
+        const bulletText = line.replace('- ', '');
         return (
           <Text key={index} style={styles.bullet}>
-            • {line.replace('- ', '')}
+            • {renderTextWithBold(bulletText, styles.bullet)}
           </Text>
         );
       }
@@ -59,10 +75,10 @@ const PrivacyPolicyScreen: React.FC = () => {
       if (line.trim() === '') {
         return <View key={index} style={styles.spacing} />;
       }
-      // Regular text
+      // Regular text (with possible inline bold)
       return (
         <Text key={index} style={styles.text}>
-          {line}
+          {renderTextWithBold(line, styles.text)}
         </Text>
       );
     });
@@ -126,6 +142,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 8,
     marginTop: 8,
+  },
+  boldInline: {
+    fontWeight: 'bold',
+    color: '#333',
   },
   bullet: {
     fontSize: 15,

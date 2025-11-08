@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+build/
+dist/
+*.test.ts
+*.test.tsx
+__tests__/
+jest.setup.js
+jest.config.js
