@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import AddChildScreen from '../AddChildScreen';
 import SecureStorage from '../../services/SecureStorage';
@@ -30,8 +30,13 @@ describe('AddChildScreen', () => {
   } as any;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.clearAllMocks();
     (SecureStorage.addChild as jest.Mock).mockReset();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('should render correctly', () => {
@@ -325,6 +330,11 @@ describe('AddChildScreen', () => {
     // Button should show "Saving..."
     await waitFor(() => {
       expect(getByText('Saving...')).toBeTruthy();
+    });
+
+    // Advance timers to allow the save operation to complete
+    act(() => {
+      jest.advanceTimersByTime(100);
     });
 
     // Wait for the saving state to be false
