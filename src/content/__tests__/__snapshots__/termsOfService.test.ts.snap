@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Terms of Service should match snapshot 1`] = `
+"# Terms of Service
+
+**Last Updated: 11/8/2025**
+
+## Acceptance of Terms
+
+By downloading, installing, or using GrowthTracker, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use this application.
+
+## NOT A MEDICAL APPLICATION
+
+**IMPORTANT: GrowthTracker is NOT a medical application and is NOT intended for medical diagnosis, treatment, or advice.**
+
+### Medical Disclaimer
+
+- This app is for informational and educational purposes only
+- This app is NOT a substitute for professional medical advice, diagnosis, or treatment
+- The growth charts and percentile calculations are based on CDC and WHO data, but may contain errors or inaccuracies
+- Always seek the advice of your pediatrician or other qualified healthcare provider with any questions regarding your child's health or growth
+- Never disregard professional medical advice or delay seeking it because of information provided by this app
+- If you think your child may have a medical emergency, call your doctor or emergency services immediately
+
+### No Medical Accuracy Guarantee
+
+We make NO WARRANTIES regarding the accuracy, reliability, or completeness of:
+
+- Growth percentile calculations
+- CDC or WHO data integration
+- Age calculations
+- Any other measurements or data displayed in the app
+
+### Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE APP CREATORS AND CONTRIBUTORS SHALL NOT BE LIABLE FOR ANY:
+
+- Health outcomes, injuries, or damages arising from use of this app
+- Decisions made based on information provided by this app
+- Errors, inaccuracies, or omissions in the app's calculations or data
+- Medical issues, developmental concerns, or other health-related matters
+
+## Use at Your Own Risk
+
+You acknowledge and agree that:
+
+- You use this app entirely at your own risk
+- You are responsible for consulting qualified medical professionals regarding your child's health and growth
+- This app is a personal tracking tool only, not a medical diagnostic tool
+- The developers are not healthcare providers and provide no medical guidance
+
+## Data Responsibility
+
+While we design the app to securely store your data locally:
+
+- You are responsible for maintaining backups of your important data
+- You are responsible for the security of your device
+- We are not liable for any data loss, corruption, or unauthorized access resulting from device theft, damage, or malware
+
+## No Warranty
+
+THIS APP IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+
+## Indemnification
+
+You agree to indemnify and hold harmless the app creators, contributors, and any associated parties from any claims, damages, losses, liabilities, and expenses (including legal fees) arising from:
+
+- Your use or misuse of the app
+- Your violation of these terms
+- Any decisions made based on information from the app
+
+## Changes to Terms
+
+We reserve the right to modify these terms at any time. Continued use of the app after changes constitutes acceptance of the updated terms.
+
+## Governing Law
+
+These terms shall be governed by and construed in accordance with the laws of your jurisdiction.
+
+## Severability
+
+If any provision of these terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force.
+
+## Contact
+
+If you have questions about these terms, please contact us at [Your Contact Information].
+
+---
+
+**By using this app, you acknowledge that you have read, understood, and agree to these Terms of Service, including the medical disclaimers and limitations of liability.**
+"
+`;
