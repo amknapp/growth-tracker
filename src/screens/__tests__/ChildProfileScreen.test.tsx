@@ -59,6 +59,8 @@ describe('ChildProfileScreen', () => {
     name: 'John Doe',
     birthDate: '2023-01-15',
     sex: 'male',
+    createdAt: '2023-01-15T12:00:00Z',
+    updatedAt: '2023-01-15T12:00:00Z',
   };
 
   const mockMeasurements: Measurement[] = [
@@ -68,7 +70,7 @@ describe('ChildProfileScreen', () => {
       type: 'weight',
       value: 10.5,
       date: '2023-06-15',
-      ageInMonths: 5,
+      createdAt: '2023-06-15T12:00:00Z',
     },
     {
       id: 'measurement-2',
@@ -76,7 +78,7 @@ describe('ChildProfileScreen', () => {
       type: 'height',
       value: 75.2,
       date: '2023-06-15',
-      ageInMonths: 5,
+      createdAt: '2023-06-15T12:00:00Z',
     },
     {
       id: 'measurement-3',
@@ -84,8 +86,8 @@ describe('ChildProfileScreen', () => {
       type: 'headCircumference',
       value: 42.5,
       date: '2023-06-15',
-      ageInMonths: 5,
       notes: 'Test notes',
+      createdAt: '2023-06-15T12:00:00Z',
     },
   ];
 

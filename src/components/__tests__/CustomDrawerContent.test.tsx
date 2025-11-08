@@ -47,12 +47,16 @@ describe('CustomDrawerContent', () => {
       name: 'John Doe',
       birthDate: '2023-01-15',
       sex: 'male',
+      createdAt: '2023-01-15T12:00:00Z',
+      updatedAt: '2023-01-15T12:00:00Z',
     },
     {
       id: 'child-2',
       name: 'Jane Doe',
       birthDate: '2022-06-20',
       sex: 'female',
+      createdAt: '2022-06-20T12:00:00Z',
+      updatedAt: '2022-06-20T12:00:00Z',
     },
   ];
 
