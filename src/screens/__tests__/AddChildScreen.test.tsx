@@ -31,6 +31,7 @@ describe('AddChildScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (SecureStorage.addChild as jest.Mock).mockReset();
   });
 
   it('should render correctly', () => {
@@ -222,9 +223,11 @@ describe('AddChildScreen', () => {
   });
 
   it('should handle save error', async () => {
-    (SecureStorage.addChild as jest.Mock).mockRejectedValue(new Error('Storage error'));
+    (SecureStorage.addChild as jest.Mock).mockRejectedValue(
+      new Error('Storage error')
+    );
 
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByPlaceholderText, queryByText } = render(
       <AddChildScreen navigation={mockNavigation} />
     );
 
@@ -238,7 +241,15 @@ describe('AddChildScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to save child profile');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Failed to save child profile'
+      );
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
     });
   });
 
