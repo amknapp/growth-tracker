@@ -29,8 +29,6 @@ import {
   getPercentileCurve,
   interpretPercentile,
 } from '../utils/percentileCalculator';
-import { getCDCChartData } from '../data/cdcData';
-import { getWHOChartData } from '../data/whoData';
 import { Colors } from '../constants/colors';
 
 interface Props {
@@ -116,15 +114,11 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
       setChartData(data);
     } catch (err) {
       console.error('Error loading chart data:', err);
-      setError('Failed to load growth chart data. Using offline data.');
-
-      // Fallback to local data
-      const fallbackData =
-        chartStandard === 'CDC'
-          ? getCDCChartData(measurementType, child.sex)
-          : getWHOChartData(measurementType, child.sex);
-
-      setChartData(fallbackData);
+      setError(
+        'Failed to load growth chart data. Please check your internet connection. ' +
+        'Growth chart data will be cached for 30 days after the first successful download.'
+      );
+      setChartData([]);
     } finally {
       setLoadingChart(false);
     }

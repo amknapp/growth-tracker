@@ -64,15 +64,6 @@ export interface GrowthChartData {
 }
 
 /**
- * Chart data for visualization
- */
-export interface ChartDataPoint {
-  x: number; // age in months
-  y: number; // measurement value
-  label?: string;
-}
-
-/**
  * Application state
  */
 export interface AppData {

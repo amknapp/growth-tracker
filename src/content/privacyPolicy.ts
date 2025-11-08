@@ -27,12 +27,12 @@ Your data never leaves your device unless you explicitly choose to back it up th
 
 ## CDC Data
 
-The app may download official CDC growth chart data from the Centers for Disease Control and Prevention (CDC.gov) to provide accurate percentile calculations. This download:
+The app downloads official CDC and WHO growth chart data from the Centers for Disease Control and Prevention (CDC.gov) to provide accurate percentile calculations. This download:
 
 - Does not include any of your personal data
 - Does not send any information about you or your children
 - Is cached locally for 30 days to minimize network requests
-- Can function offline using embedded fallback data
+- Requires internet connection for initial download only
 
 ## Your Rights
 

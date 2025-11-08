@@ -9,7 +9,7 @@ A privacy-focused React Native app for tracking children's growth and developmen
 
 - 📊 **Growth Charts**: Track weight, height, and head circumference using official CDC and WHO standards
 - 🔒 **Privacy-First**: All data stored locally with device-level encryption (Keychain/Keystore)
-- 📱 **Offline-First**: Works completely offline, no internet required
+- 📱 **Offline-First**: Works offline after initial data download (cached for 30 days)
 - 📈 **Percentile Tracking**: Visualize your child's growth against population percentiles
 - 🌐 **Multiple Children**: Track multiple children with individual profiles
 - 📝 **Measurement History**: Record and view historical measurements
@@ -24,7 +24,7 @@ GrowthTracker is designed with privacy as a core principle:
 - **No analytics**: We don't track usage
 - **No third-party services**: Your data stays on your device
 - **No accounts**: No registration required
-- **Works offline**: No internet connection needed
+- **Works offline**: After initial growth chart download (one-time, cached for 30 days)
 
 See our [Privacy Policy](src/content/privacyPolicy.ts) for full details.
 
