@@ -1,6 +1,6 @@
 export const termsOfServiceContent = `# Terms of Service
 
-**Last Updated: ${new Date().toLocaleDateString()}**
+**Last Updated: 11/8/2025**
 
 ## Acceptance of Terms
 

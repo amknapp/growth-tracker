@@ -1,6 +1,6 @@
 export const privacyPolicyContent = `# Privacy Policy
 
-**Last Updated: ${new Date().toLocaleDateString()}**
+**Last Updated: 11/8/2025**
 
 ## Data Collection
 
