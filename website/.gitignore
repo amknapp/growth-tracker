@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# AWS deployment files (if you want to keep distribution ID private)
+# deploy.sh  # Uncomment if you add your real distribution ID
+# deploy.ps1 # Uncomment if you add your real distribution ID
