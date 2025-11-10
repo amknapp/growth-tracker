@@ -3,22 +3,22 @@
  * Shows children list for quick switching and app navigation
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import {
-  DrawerContentScrollView,
   DrawerContentComponentProps,
+  DrawerContentScrollView,
 } from '@react-navigation/drawer';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Child } from '../types';
 import SecureStorage from '../services/SecureStorage';
-import { getCurrentAge, formatAge } from '../utils/ageCalculator';
+import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { Colors } from '../constants/colors';
 
 const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {

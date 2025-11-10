@@ -3,23 +3,23 @@
  * Displays child's information and growth measurements
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   Alert,
   Animated,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useFocusEffect, useNavigation, DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { ChildProfileNavigationProp, ChildProfileRouteProp } from '../types/navigation';
 import { Child, Measurement } from '../types';
 import SecureStorage from '../services/SecureStorage';
-import { getCurrentAge, formatAge } from '../utils/ageCalculator';
+import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { Colors } from '../constants/colors';
 
 interface Props {
@@ -65,7 +65,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const getLatestMeasurement = (type: string): string => {
     const typedMeasurements = measurements.filter(m => m.type === type);
-    if (typedMeasurements.length === 0) return 'No data';
+    if (typedMeasurements.length === 0) {return 'No data';}
 
     const latest = typedMeasurements[typedMeasurements.length - 1];
     const unit = type === 'weight' ? 'kg' : 'cm';
