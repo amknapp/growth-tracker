@@ -25,6 +25,18 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 // Mock react-native-vector-icons
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon');
 
+// Mock @react-native-community/datetimepicker
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = require('react');
+  return jest.fn(({ value, onChange, testID }) => {
+    const MockDateTimePicker = require('react-native').View;
+    return React.createElement(MockDateTimePicker, {
+      testID: testID || 'dateTimePicker',
+      onPress: () => onChange && onChange({}, value),
+    });
+  });
+});
+
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {
   const View = require('react-native/Libraries/Components/View/View');

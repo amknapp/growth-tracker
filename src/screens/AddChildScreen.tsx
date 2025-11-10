@@ -12,9 +12,11 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { RootStackParamList } from '../types/navigation';
 import { Child, Sex } from '../types';
 import SecureStorage from '../services/SecureStorage';
@@ -27,12 +29,32 @@ interface Props {
 const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [name, setName] = useState('');
   const [sex, setSex] = useState<Sex>('male');
-  const [birthDate, setBirthDate] = useState('');
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const drawerNavigation = useNavigation();
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    // On Android, the picker closes automatically after selection
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+
+    if (selectedDate) {
+      setBirthDate(selectedDate);
+    }
+  };
+
+  const formatDate = (dateValue: Date | null): string => {
+    if (!dateValue) return '';
+    const year = dateValue.getFullYear();
+    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+    const day = String(dateValue.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handleSave = async () => {
@@ -42,21 +64,13 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    if (!birthDate.trim()) {
-      Alert.alert('Error', 'Please enter a birth date');
-      return;
-    }
-
-    // Validate date format (YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(birthDate)) {
-      Alert.alert('Error', 'Please enter date in YYYY-MM-DD format');
+    if (!birthDate) {
+      Alert.alert('Error', 'Please select a birth date');
       return;
     }
 
     // Validate date is not in the future
-    const birthDateObj = new Date(birthDate);
-    if (birthDateObj > new Date()) {
+    if (birthDate > new Date()) {
       Alert.alert('Error', 'Birth date cannot be in the future');
       return;
     }
@@ -67,7 +81,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
       const newChild: Child = {
         id: Date.now().toString(),
         name: name.trim(),
-        birthDate: birthDate,
+        birthDate: formatDate(birthDate),
         sex,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -104,14 +118,33 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         <Text style={styles.label}>Birth Date</Text>
-        <TextInput
-          style={styles.input}
-          value={birthDate}
-          onChangeText={setBirthDate}
-          placeholder="YYYY-MM-DD (e.g., 2023-06-15)"
-          placeholderTextColor="#999"
-        />
-        <Text style={styles.hint}>Format: YYYY-MM-DD</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={birthDate ? styles.dateText : styles.datePlaceholder}>
+            {birthDate ? formatDate(birthDate) : 'Select birth date'}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={birthDate || new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+            maximumDate={new Date()}
+          />
+        )}
+
+        {Platform.OS === 'ios' && showDatePicker && (
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={() => setShowDatePicker(false)}
+          >
+            <Text style={styles.doneButtonText}>Done</Text>
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.label}>Sex</Text>
         <View style={styles.sexContainer}>
@@ -222,6 +255,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  dateButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  datePlaceholder: {
+    fontSize: 16,
+    color: '#999',
+  },
+  doneButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  doneButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   sexContainer: {
     flexDirection: 'row',
