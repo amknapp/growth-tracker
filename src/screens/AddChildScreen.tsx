@@ -17,10 +17,18 @@ import {
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { v4 as uuidv4 } from 'uuid';
 import { RootStackParamList } from '../types/navigation';
 import { Child, Sex } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { Colors } from '../constants/colors';
+import {
+  getValidationErrorMessage,
+  isValidDate,
+  isValidName,
+  sanitizeName,
+} from '../utils/validation';
+import { logger } from '../utils/logger';
 
 interface Props {
   navigation: NativeStackNavigationProp<RootStackParamList, 'AddChild'>;
@@ -39,8 +47,8 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleDateChange = (
-    _event: {type: string; nativeEvent: {timestamp: number}},
-    selectedDate?: Date
+    _event: { type: string; nativeEvent: { timestamp: number } },
+    selectedDate?: Date,
   ) => {
     // On Android, the picker closes automatically after selection
     if (Platform.OS === 'android') {
@@ -53,7 +61,9 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const formatDate = (dateValue: Date | null): string => {
-    if (!dateValue) {return '';}
+    if (!dateValue) {
+      return '';
+    }
     const year = dateValue.getFullYear();
     const month = String(dateValue.getMonth() + 1).padStart(2, '0');
     const day = String(dateValue.getDate()).padStart(2, '0');
@@ -61,9 +71,16 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleSave = async () => {
-    // Validate inputs
-    if (!name.trim()) {
+    // Sanitize and validate name
+    const sanitizedName = sanitizeName(name);
+
+    if (!sanitizedName) {
       Alert.alert('Error', 'Please enter a name');
+      return;
+    }
+
+    if (!isValidName(sanitizedName)) {
+      Alert.alert('Error', getValidationErrorMessage('name'));
       return;
     }
 
@@ -73,8 +90,8 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     // Validate date is not in the future
-    if (birthDate > new Date()) {
-      Alert.alert('Error', 'Birth date cannot be in the future');
+    if (!isValidDate(birthDate)) {
+      Alert.alert('Error', getValidationErrorMessage('date'));
       return;
     }
 
@@ -82,8 +99,8 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       const newChild: Child = {
-        id: Date.now().toString(),
-        name: name.trim(),
+        id: uuidv4(),
+        name: sanitizedName,
         birthDate: formatDate(birthDate),
         sex,
         createdAt: new Date().toISOString(),
@@ -95,7 +112,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      console.error('Error saving child:', error);
+      logger.error('Error saving child', error);
       Alert.alert('Error', 'Failed to save child profile');
     } finally {
       setSaving(false);

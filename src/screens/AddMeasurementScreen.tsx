@@ -16,10 +16,21 @@ import {
 } from 'react-native';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { AddMeasurementNavigationProp, AddMeasurementRouteProp } from '../types/navigation';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  AddMeasurementNavigationProp,
+  AddMeasurementRouteProp,
+} from '../types/navigation';
 import { Measurement, MeasurementType } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { Colors } from '../constants/colors';
+import {
+  getValidationErrorMessage,
+  isValidDate,
+  isValidMeasurementValue,
+  sanitizeNotes,
+} from '../utils/validation';
+import { logger } from '../utils/logger';
 
 interface Props {
   navigation: AddMeasurementNavigationProp;
@@ -43,8 +54,8 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleDateChange = (
-    _event: {type: string; nativeEvent: {timestamp: number}},
-    selectedDate?: Date
+    _event: { type: string; nativeEvent: { timestamp: number } },
+    selectedDate?: Date,
   ) => {
     // On Android, the picker closes automatically after selection
     if (Platform.OS === 'android') {
@@ -71,18 +82,28 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     // Validate date is not in the future
-    if (date > new Date()) {
-      Alert.alert('Error', 'Measurement date cannot be in the future');
+    if (!isValidDate(date)) {
+      Alert.alert('Error', getValidationErrorMessage('date'));
       return;
     }
 
+    // Sanitize notes
+    const sanitizedNotes = notes ? sanitizeNotes(notes) : '';
+
     // Validate and collect measurements
-    const measurementsToSave: Array<{type: MeasurementType, value: number}> = [];
+    const measurementsToSave: Array<{ type: MeasurementType; value: number }> =
+      [];
 
     if (weight.trim()) {
       const numWeight = parseFloat(weight);
-      if (isNaN(numWeight) || numWeight <= 0) {
-        Alert.alert('Error', 'Please enter a valid positive number for weight');
+      if (!isValidMeasurementValue(numWeight, 'weight')) {
+        Alert.alert(
+          'Error',
+          getValidationErrorMessage(
+            'measurement',
+            'Weight must be between 0.1 and 300 kg',
+          ),
+        );
         return;
       }
       measurementsToSave.push({ type: 'weight', value: numWeight });
@@ -90,8 +111,14 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
 
     if (height.trim()) {
       const numHeight = parseFloat(height);
-      if (isNaN(numHeight) || numHeight <= 0) {
-        Alert.alert('Error', 'Please enter a valid positive number for height');
+      if (!isValidMeasurementValue(numHeight, 'height')) {
+        Alert.alert(
+          'Error',
+          getValidationErrorMessage(
+            'measurement',
+            'Height must be between 20 and 250 cm',
+          ),
+        );
         return;
       }
       measurementsToSave.push({ type: 'height', value: numHeight });
@@ -99,8 +126,14 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
 
     if (headCircumference.trim()) {
       const numHead = parseFloat(headCircumference);
-      if (isNaN(numHead) || numHead <= 0) {
-        Alert.alert('Error', 'Please enter a valid positive number for head circumference');
+      if (!isValidMeasurementValue(numHead, 'headCircumference')) {
+        Alert.alert(
+          'Error',
+          getValidationErrorMessage(
+            'measurement',
+            'Head circumference must be between 20 and 100 cm',
+          ),
+        );
         return;
       }
       measurementsToSave.push({ type: 'headCircumference', value: numHead });
@@ -110,15 +143,14 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
 
     try {
       // Save all measurements
-      for (let i = 0; i < measurementsToSave.length; i++) {
-        const measurement = measurementsToSave[i];
+      for (const measurement of measurementsToSave) {
         const newMeasurement: Measurement = {
-          id: `${Date.now()}-${i}`,
+          id: uuidv4(),
           childId,
           date: formatDate(date),
           type: measurement.type,
           value: measurement.value,
-          notes: notes.trim() || undefined,
+          notes: sanitizedNotes || undefined,
           createdAt: new Date().toISOString(),
         };
         await SecureStorage.addMeasurement(newMeasurement);
@@ -127,7 +159,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
       // Navigate back immediately - no need for success alert
       navigation.goBack();
     } catch (error) {
-      console.error('Error saving measurements:', error);
+      logger.error('Error saving measurements', error);
       Alert.alert('Error', 'Failed to save measurements');
     } finally {
       setSaving(false);
@@ -143,8 +175,12 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text style={styles.headerTitle}>Add Measurement</Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Enter measurements (optional for each)</Text>
-        <Text style={styles.sectionSubtitle}>Fill in any or all measurements taken at the same time</Text>
+        <Text style={styles.sectionTitle}>
+          Enter measurements (optional for each)
+        </Text>
+        <Text style={styles.sectionSubtitle}>
+          Fill in any or all measurements taken at the same time
+        </Text>
 
         <Text style={styles.label}>Weight (kg)</Text>
         <TextInput
@@ -181,9 +217,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
         >
-          <Text style={styles.dateText}>
-            {formatDate(date)}
-          </Text>
+          <Text style={styles.dateText}>{formatDate(date)}</Text>
         </TouchableOpacity>
 
         {showDatePicker && (

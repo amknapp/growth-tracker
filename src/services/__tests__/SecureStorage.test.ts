@@ -10,11 +10,17 @@ import { Child, Measurement, AppData } from '../../types';
 jest.mock('react-native-keychain', () => ({
   setGenericPassword: jest.fn(),
   getGenericPassword: jest.fn(),
+  resetGenericPassword: jest.fn(),
   ACCESSIBLE: {
     WHEN_UNLOCKED: 'AccessibleWhenUnlocked',
+    WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'AccessibleWhenUnlockedThisDeviceOnly',
   },
   ACCESS_CONTROL: {
     BIOMETRY_ANY_OR_DEVICE_PASSCODE: 'BiometryAnyOrDevicePasscode',
+    BIOMETRY_CURRENT_SET: 'BiometryCurrentSet',
+  },
+  SECURITY_LEVEL: {
+    SECURE_HARDWARE: 'SecureHardware',
   },
 }));
 
@@ -55,17 +61,17 @@ describe('SecureStorage', () => {
         JSON.stringify(mockAppData),
         expect.objectContaining({
           service: 'growth_tracker_data',
-        })
+        }),
       );
     });
 
     it('should throw error when save fails', async () => {
       (Keychain.setGenericPassword as jest.Mock).mockRejectedValueOnce(
-        new Error('Storage error')
+        new Error('Storage error'),
       );
 
       await expect(SecureStorage.saveData(mockAppData)).rejects.toThrow(
-        'Failed to save data securely'
+        'Failed to save data securely',
       );
     });
   });
@@ -98,11 +104,11 @@ describe('SecureStorage', () => {
 
     it('should throw error when load fails', async () => {
       (Keychain.getGenericPassword as jest.Mock).mockRejectedValueOnce(
-        new Error('Storage error')
+        new Error('Storage error'),
       );
 
       await expect(SecureStorage.loadData()).rejects.toThrow(
-        'Failed to load data securely'
+        'Failed to load data securely',
       );
     });
   });
@@ -121,7 +127,7 @@ describe('SecureStorage', () => {
           children: [mockChild],
           measurements: [],
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -136,7 +142,7 @@ describe('SecureStorage', () => {
       await SecureStorage.updateChild('1', updates);
 
       const savedData = JSON.parse(
-        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1]
+        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1],
       );
 
       expect(savedData.children[0].name).toBe('Updated Name');
@@ -149,7 +155,7 @@ describe('SecureStorage', () => {
       });
 
       await expect(
-        SecureStorage.updateChild('non-existent', { name: 'Test' })
+        SecureStorage.updateChild('non-existent', { name: 'Test' }),
       ).rejects.toThrow('Child not found');
     });
   });
@@ -182,7 +188,7 @@ describe('SecureStorage', () => {
       await SecureStorage.deleteChild('1');
 
       const savedData = JSON.parse(
-        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1]
+        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1],
       );
 
       expect(savedData.children).toHaveLength(1);
@@ -246,7 +252,7 @@ describe('SecureStorage', () => {
       await SecureStorage.addMeasurement(mockMeasurement);
 
       const savedData = JSON.parse(
-        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1]
+        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1],
       );
 
       expect(savedData.measurements).toHaveLength(1);
@@ -275,7 +281,7 @@ describe('SecureStorage', () => {
       await SecureStorage.deleteMeasurement('1');
 
       const savedData = JSON.parse(
-        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1]
+        (Keychain.setGenericPassword as jest.Mock).mock.calls[0][1],
       );
 
       expect(savedData.measurements).toHaveLength(1);
@@ -346,7 +352,7 @@ describe('SecureStorage', () => {
 
       const measurements = await SecureStorage.getMeasurementsByType(
         '1',
-        'weight'
+        'weight',
       );
 
       expect(measurements).toHaveLength(2);

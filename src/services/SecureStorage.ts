@@ -7,6 +7,8 @@
 
 import * as Keychain from 'react-native-keychain';
 import { AppData, Child, Measurement } from '../types';
+import { recoverAppData } from '../utils/dataValidation';
+import { logger } from '../utils/logger';
 
 const STORAGE_KEY = 'growth_tracker_data';
 
@@ -22,11 +24,12 @@ class SecureStorage {
       const jsonData = JSON.stringify(data);
       await Keychain.setGenericPassword(STORAGE_KEY, jsonData, {
         service: STORAGE_KEY,
-        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED,
-        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
+        securityLevel: Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
       });
     } catch (error) {
-      console.error('Error saving data:', error);
+      logger.error('Error saving data', error);
       throw new Error('Failed to save data securely');
     }
   }
@@ -49,9 +52,11 @@ class SecureStorage {
       }
 
       const data = JSON.parse(credentials.password);
-      return data;
+
+      // Validate and recover data if corrupted
+      return recoverAppData(data);
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data', error);
       throw new Error('Failed to load data securely');
     }
   }
@@ -125,7 +130,7 @@ class SecureStorage {
    */
   async updateMeasurement(
     measurementId: string,
-    updates: Partial<Measurement>
+    updates: Partial<Measurement>,
   ): Promise<void> {
     const data = await this.loadData();
     const index = data.measurements.findIndex(m => m.id === measurementId);
@@ -166,7 +171,7 @@ class SecureStorage {
    */
   async getMeasurementsByType(
     childId: string,
-    type: string
+    type: string,
   ): Promise<Measurement[]> {
     const measurements = await this.getMeasurementsForChild(childId);
     return measurements.filter(m => m.type === type);
@@ -179,7 +184,7 @@ class SecureStorage {
     try {
       await Keychain.resetGenericPassword({ service: STORAGE_KEY });
     } catch (error) {
-      console.error('Error clearing data:', error);
+      logger.error('Error clearing data', error);
       throw new Error('Failed to clear data');
     }
   }
