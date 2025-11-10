@@ -38,7 +38,7 @@ describe('AddMeasurementScreen', () => {
 
   it('should render correctly', () => {
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     expect(getByText('Add Measurement')).toBeTruthy();
@@ -52,7 +52,7 @@ describe('AddMeasurementScreen', () => {
 
   it('should allow entering weight', () => {
     const { getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const weightInput = getByPlaceholderText('Enter weight in kg');
@@ -63,20 +63,23 @@ describe('AddMeasurementScreen', () => {
 
   it('should show error when no measurements entered', async () => {
     const { getByText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const saveButton = getByText('Save Measurement');
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter at least one measurement');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Please enter at least one measurement',
+      );
     });
   });
 
   it('should show error for invalid weight', async () => {
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const weightInput = getByPlaceholderText('Enter weight in kg');
@@ -86,13 +89,16 @@ describe('AddMeasurementScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter a valid positive number for weight');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Weight must be between 0.1 and 300 kg',
+      );
     });
   });
 
   it('should show error for negative weight', async () => {
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const weightInput = getByPlaceholderText('Enter weight in kg');
@@ -102,13 +108,16 @@ describe('AddMeasurementScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter a valid positive number for weight');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Weight must be between 0.1 and 300 kg',
+      );
     });
   });
 
   it('should show error for invalid height', async () => {
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const heightInput = getByPlaceholderText('Enter height in cm');
@@ -118,13 +127,16 @@ describe('AddMeasurementScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter a valid positive number for height');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Height must be between 20 and 250 cm',
+      );
     });
   });
 
   it('should show error for invalid head circumference', async () => {
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const headInput = getByPlaceholderText('Enter head circumference in cm');
@@ -134,7 +146,10 @@ describe('AddMeasurementScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please enter a valid positive number for head circumference');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Head circumference must be between 20 and 100 cm',
+      );
     });
   });
 
@@ -142,7 +157,7 @@ describe('AddMeasurementScreen', () => {
     (SecureStorage.addMeasurement as jest.Mock).mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const weightInput = getByPlaceholderText('Enter weight in kg');
@@ -157,7 +172,7 @@ describe('AddMeasurementScreen', () => {
           childId: 'test-child-123',
           type: 'weight',
           value: 10.5,
-        })
+        }),
       );
       expect(mockNavigation.goBack).toHaveBeenCalled();
     });
@@ -167,7 +182,7 @@ describe('AddMeasurementScreen', () => {
     (SecureStorage.addMeasurement as jest.Mock).mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const weightInput = getByPlaceholderText('Enter weight in kg');
@@ -185,22 +200,24 @@ describe('AddMeasurementScreen', () => {
     await waitFor(() => {
       expect(SecureStorage.addMeasurement).toHaveBeenCalledTimes(3);
       expect(SecureStorage.addMeasurement).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'weight', value: 10.5 })
+        expect.objectContaining({ type: 'weight', value: 10.5 }),
       );
       expect(SecureStorage.addMeasurement).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'height', value: 75.2 })
+        expect.objectContaining({ type: 'height', value: 75.2 }),
       );
       expect(SecureStorage.addMeasurement).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'headCircumference', value: 42.5 })
+        expect.objectContaining({ type: 'headCircumference', value: 42.5 }),
       );
     });
   });
 
   it('should handle save error', async () => {
-    (SecureStorage.addMeasurement as jest.Mock).mockRejectedValue(new Error('Storage error'));
+    (SecureStorage.addMeasurement as jest.Mock).mockRejectedValue(
+      new Error('Storage error'),
+    );
 
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const weightInput = getByPlaceholderText('Enter weight in kg');
@@ -210,13 +227,16 @@ describe('AddMeasurementScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed to save measurements');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Failed to save measurements',
+      );
     });
   });
 
   it('should call goBack when cancel is pressed', () => {
     const { getByText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const cancelButton = getByText('Cancel');
@@ -227,11 +247,11 @@ describe('AddMeasurementScreen', () => {
 
   it('should show saving state', async () => {
     (SecureStorage.addMeasurement as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
+      () => new Promise(resolve => setTimeout(resolve, 100)),
     );
 
     const { getByText, getByPlaceholderText } = render(
-      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />
+      <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
     );
 
     const weightInput = getByPlaceholderText('Enter weight in kg');
