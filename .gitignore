@@ -66,6 +66,10 @@ yarn-error.log
 # testing
 /coverage
 
+# Sensitive files
+android/gradle.properties
+android/app/upload.keystore.base64
+
 # Yarn
 .yarn/*
 !.yarn/patches

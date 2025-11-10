@@ -3,7 +3,7 @@
  * Shows children list for quick switching and app navigation
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,38 +16,21 @@ import {
 } from '@react-navigation/drawer';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Child } from '../types';
-import SecureStorage from '../services/SecureStorage';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { Colors } from '../constants/colors';
+import { useChildren } from '../hooks/useChildren'; // Import the new hook
 
 const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
-  const [children, setChildren] = useState<Child[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { children, loading, refreshChildren } = useChildren(); // Use the new hook
   const navigation = useNavigation();
-
-  useEffect(() => {
-    loadChildren();
-  }, []);
 
   // Reload children when drawer opens
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      loadChildren();
+      refreshChildren(); // Refresh children when drawer is focused
     });
     return unsubscribe;
-  }, [navigation]);
-
-  const loadChildren = async () => {
-    try {
-      const childrenData = await SecureStorage.getChildren();
-      setChildren(childrenData);
-    } catch (error) {
-      console.error('Error loading children:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [navigation, refreshChildren]);
 
   const handleChildPress = (childId: string) => {
     // Navigate to the child's profile within the HomeStack
