@@ -413,6 +413,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
                 <CartesianChart
                   data={victoryData.data}
                   xKey="x"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   yKeys={victoryData.yKeys as any}
                   axisOptions={{
                     tickCount: 5,
@@ -423,6 +424,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
                   }}
                   domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
                 >
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {({ points }: any) => (
                     <>
                       {/* Percentile curves */}
