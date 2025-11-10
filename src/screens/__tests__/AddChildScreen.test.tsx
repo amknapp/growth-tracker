@@ -133,10 +133,8 @@ describe('AddChildScreen', () => {
     });
   });
 
-  // Removed test for invalid date format since date picker enforces valid dates
-
   // Note: Date picker enforces maximumDate={new Date()}, so future dates cannot be selected in UI
-  // But we keep validation logic for edge cases
+  // Invalid date format tests removed since picker only provides valid dates
 
   it('should save child successfully', async () => {
     (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
@@ -152,20 +150,101 @@ describe('AddChildScreen', () => {
     const dateButton = getByText('Select birth date');
     fireEvent.press(dateButton);
 
-    // The date picker mock doesn't actually change the state, so we'll just test that the save works
-    // In a real test environment, we would need to properly mock the DateTimePicker's onChange
-    // For now, we need to directly trigger the internal state change by using a different approach
+    // Simulate date selection
+    const datePicker = getByTestId('dateTimePicker');
+    fireEvent.press(datePicker); // This triggers onChange with the current value
 
     const saveButton = getByText('Save Child Profile');
+    fireEvent.press(saveButton);
 
-    // Since we can't easily simulate the date picker selection in the test,
-    // we'll skip this specific test case and rely on manual testing
-    // The test structure remains for documentation purposes
+    await waitFor(() => {
+      expect(SecureStorage.addChild).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'John Doe',
+          sex: 'male', // Default
+        })
+      );
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Success',
+        'Child profile added successfully',
+        expect.any(Array)
+      );
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
+    });
   });
 
-  // Test removed - requires proper DateTimePicker mock with state management
+  it('should save child with female sex', async () => {
+    (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-  // Test removed - requires proper DateTimePicker mock with state management
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
+      <AddChildScreen navigation={mockNavigation} />
+    );
+
+    const nameInput = getByPlaceholderText("Enter child's name");
+    fireEvent.changeText(nameInput, 'Jane Doe');
+
+    const dateButton = getByText('Select birth date');
+    fireEvent.press(dateButton);
+    const datePicker = getByTestId('dateTimePicker');
+    fireEvent.press(datePicker);
+
+    const girlButton = getByText('Girl');
+    fireEvent.press(girlButton);
+
+    const saveButton = getByText('Save Child Profile');
+    fireEvent.press(saveButton);
+
+    await waitFor(() => {
+      expect(SecureStorage.addChild).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Jane Doe',
+          sex: 'female',
+        })
+      );
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
+    });
+  });
+
+  it('should handle save error', async () => {
+    (SecureStorage.addChild as jest.Mock).mockRejectedValue(
+      new Error('Storage error')
+    );
+
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
+      <AddChildScreen navigation={mockNavigation} />
+    );
+
+    const nameInput = getByPlaceholderText("Enter child's name");
+    fireEvent.changeText(nameInput, 'John Doe');
+
+    const dateButton = getByText('Select birth date');
+    fireEvent.press(dateButton);
+    const datePicker = getByTestId('dateTimePicker');
+    fireEvent.press(datePicker);
+
+    const saveButton = getByText('Save Child Profile');
+    fireEvent.press(saveButton);
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Failed to save child profile'
+      );
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
+    });
+  })
 
   it('should call goBack when cancel is pressed', () => {
     const { getByText } = render(
@@ -178,7 +257,71 @@ describe('AddChildScreen', () => {
     expect(mockNavigation.goBack).toHaveBeenCalled();
   });
 
-  // Test removed - requires proper DateTimePicker mock with state management
+  it('should trim whitespace from name', async () => {
+    (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-  // Test removed - requires proper DateTimePicker mock with state management
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
+      <AddChildScreen navigation={mockNavigation} />
+    );
+
+    const nameInput = getByPlaceholderText("Enter child's name");
+    fireEvent.changeText(nameInput, '  John Doe  ');
+
+    const dateButton = getByText('Select birth date');
+    fireEvent.press(dateButton);
+    const datePicker = getByTestId('dateTimePicker');
+    fireEvent.press(datePicker);
+
+    const saveButton = getByText('Save Child Profile');
+    fireEvent.press(saveButton);
+
+    await waitFor(() => {
+      expect(SecureStorage.addChild).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'John Doe', // Trimmed
+        })
+      );
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
+    });
+  });
+
+  it('should disable save button while saving', async () => {
+    (SecureStorage.addChild as jest.Mock).mockImplementation(
+      () => new Promise(resolve => setTimeout(resolve, 100))
+    );
+
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
+      <AddChildScreen navigation={mockNavigation} />
+    );
+
+    const nameInput = getByPlaceholderText("Enter child's name");
+    fireEvent.changeText(nameInput, 'John Doe');
+
+    const dateButton = getByText('Select birth date');
+    fireEvent.press(dateButton);
+    const datePicker = getByTestId('dateTimePicker');
+    fireEvent.press(datePicker);
+
+    const saveButton = getByText('Save Child Profile');
+    fireEvent.press(saveButton);
+
+    // Button should show "Saving..."
+    await waitFor(() => {
+      expect(getByText('Saving...')).toBeTruthy();
+    });
+
+    // Advance timers to allow the save operation to complete
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
+
+    // Wait for the saving state to be false
+    await waitFor(() => {
+      expect(queryByText('Saving...')).toBeNull();
+    });
+  });
 });

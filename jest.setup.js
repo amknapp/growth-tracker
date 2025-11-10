@@ -28,13 +28,39 @@ jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon');
 // Mock @react-native-community/datetimepicker
 jest.mock('@react-native-community/datetimepicker', () => {
   const React = require('react');
-  return jest.fn(({ value, onChange, testID }) => {
-    const MockDateTimePicker = require('react-native').View;
-    return React.createElement(MockDateTimePicker, {
-      testID: testID || 'dateTimePicker',
-      onPress: () => onChange && onChange({}, value),
-    });
-  });
+  const { TouchableOpacity, Text } = require('react-native');
+
+  // Store the current onChange handler so tests can trigger it
+  let currentOnChange = null;
+  let currentValue = null;
+
+  const MockDateTimePicker = (props) => {
+    currentOnChange = props.onChange;
+    currentValue = props.value;
+
+    return React.createElement(
+      TouchableOpacity,
+      {
+        testID: props.testID || 'dateTimePicker',
+        onPress: () => {
+          // When pressed in tests, call onChange with the current value
+          if (props.onChange) {
+            props.onChange({}, props.value);
+          }
+        },
+      },
+      React.createElement(Text, {}, 'DateTimePicker Mock')
+    );
+  };
+
+  // Expose a way for tests to simulate date selection
+  MockDateTimePicker.selectDate = (date) => {
+    if (currentOnChange) {
+      currentOnChange({}, date);
+    }
+  };
+
+  return MockDateTimePicker;
 });
 
 // Mock react-native-gesture-handler
