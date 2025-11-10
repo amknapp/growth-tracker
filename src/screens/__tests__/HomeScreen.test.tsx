@@ -3,7 +3,14 @@
  */
 
 import React from 'react';
-import { render, waitFor, act, fireEvent, within, screen } from '@testing-library/react-native';
+import {
+  render,
+  waitFor,
+  act,
+  fireEvent,
+  within,
+  screen,
+} from '@testing-library/react-native';
 import { Alert } from 'react-native'; // Add this import
 import HomeScreen from '../HomeScreen';
 import SecureStorage from '../../services/SecureStorage';
@@ -30,7 +37,9 @@ jest.mock('@react-navigation/native', () => {
 
 jest.mock('react-native-vector-icons/MaterialIcons', () => {
   const { Text } = jest.requireActual('react-native');
-  return ({ name, ...props }) => <Text {...props}>{name}</Text>;
+  return ({ name, ...props }: { name: string; [key: string]: any }) => (
+    <Text {...props}>{name}</Text>
+  );
 });
 
 // Mock Alert
@@ -43,12 +52,25 @@ jest.mock('react-native-gesture-handler', () => {
     interpolate: jest.fn(() => 1), // Return a fixed value for scale
   });
 
-  const Swipeable = ({ children, renderRightActions }) => {
+  const Swipeable = ({
+    children,
+    renderRightActions,
+  }: {
+    children: React.ReactNode;
+    renderRightActions?: (
+      progressAnimatedValue: any,
+      dragAnimatedValue: any,
+    ) => React.ReactNode;
+  }) => {
     return (
       <View>
         {children}
         {/* Render the right actions directly for testing purposes */}
-        {renderRightActions && renderRightActions(mockAnimatedInterpolation(), mockAnimatedInterpolation())}
+        {renderRightActions &&
+          renderRightActions(
+            mockAnimatedInterpolation(),
+            mockAnimatedInterpolation(),
+          )}
       </View>
     );
   };
@@ -85,10 +107,11 @@ describe('HomeScreen', () => {
     jest.clearAllMocks();
     // Mock getChildren to return a pending promise by default
     (SecureStorage.getChildren as jest.Mock).mockImplementation(
-      () => new Promise((resolve, reject) => {
-        resolveGetChildren = resolve;
-        rejectGetChildren = reject;
-      })
+      () =>
+        new Promise((resolve, reject) => {
+          resolveGetChildren = resolve;
+          rejectGetChildren = reject;
+        }),
     );
   });
 
@@ -137,7 +160,9 @@ describe('HomeScreen', () => {
   it('should handle delete child', async () => {
     (SecureStorage.deleteChild as jest.Mock).mockResolvedValue(undefined);
 
-    const { getByText, queryByText } = render(<HomeScreen navigation={null as any} />);
+    const { getByText, queryByText } = render(
+      <HomeScreen navigation={null as any} />,
+    );
 
     await act(async () => {
       (useFocusEffect as jest.Mock).mock.calls[0][0](); // Trigger useFocusEffect
@@ -158,7 +183,7 @@ describe('HomeScreen', () => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Delete Child',
         'Are you sure you want to delete Test Child 1? This will also delete all their measurements.',
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -166,7 +191,9 @@ describe('HomeScreen', () => {
     const deleteButton = (Alert.alert as jest.Mock).mock.calls[0][2][1];
     await act(async () => {
       // Re-mock getChildren to return the list without the deleted child
-      (SecureStorage.getChildren as jest.Mock).mockResolvedValue([mockChildren[1]]);
+      (SecureStorage.getChildren as jest.Mock).mockResolvedValue([
+        mockChildren[1],
+      ]);
       deleteButton.onPress();
     });
 
