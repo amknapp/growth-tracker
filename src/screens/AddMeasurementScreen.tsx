@@ -42,7 +42,10 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (
+    _event: {type: string; nativeEvent: {timestamp: number}},
+    selectedDate?: Date
+  ) => {
     // On Android, the picker closes automatically after selection
     if (Platform.OS === 'android') {
       setShowDatePicker(false);

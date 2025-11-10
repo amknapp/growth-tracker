@@ -9,12 +9,13 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TextStyle,
 } from 'react-native';
 import { privacyPolicyContent } from '../content/privacyPolicy';
 
 const PrivacyPolicyScreen: React.FC = () => {
   // Helper function to render text with inline bold formatting
-  const renderTextWithBold = (text: string, baseStyle: any) => {
+  const renderTextWithBold = (text: string, baseStyle: TextStyle | TextStyle[]) => {
     const parts = text.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {

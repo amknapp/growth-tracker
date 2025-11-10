@@ -61,6 +61,23 @@ interface CDCDataRow {
   P97?: number;
 }
 
+interface WHODataRow {
+  Month?: number;
+  month?: number;
+  L: number;
+  M: number;
+  S: number;
+  P3?: number;
+  P5?: number;
+  P10?: number;
+  P25?: number;
+  P50?: number;
+  P75?: number;
+  P90?: number;
+  P95?: number;
+  P97?: number;
+}
+
 interface CDCDataCache {
   male: GrowthChartDataPoint[];
   female: GrowthChartDataPoint[];
@@ -85,7 +102,7 @@ class CDCDataService {
   /**
    * Parse CDC CSV data and organize by sex
    */
-  private parseCDCData(data: any[]): CDCDataCache {
+  private parseCDCData(data: CDCDataRow[]): CDCDataCache {
     const male: GrowthChartDataPoint[] = [];
     const female: GrowthChartDataPoint[] = [];
 
@@ -115,10 +132,10 @@ class CDCDataService {
   /**
    * Parse WHO CSV data (single gender per file)
    */
-  private parseWHOData(data: any[]): GrowthChartDataPoint[] {
+  private parseWHOData(data: WHODataRow[]): GrowthChartDataPoint[] {
     const points: GrowthChartDataPoint[] = [];
 
-    data.forEach((row: any) => {
+    data.forEach((row: WHODataRow) => {
       // WHO files use "Month" instead of "Agemos"
       const ageInMonths = row.Month !== undefined ? row.Month : row.month;
 
@@ -214,7 +231,7 @@ class CDCDataService {
       }
 
       // Transform and return data
-      const parsedData = this.parseCDCData(results.data);
+      const parsedData = this.parseCDCData(results.data as CDCDataRow[]);
       console.log(`Successfully fetched and parsed CDC data: ${parsedData.male.length} male, ${parsedData.female.length} female data points`);
 
       return parsedData;
@@ -252,7 +269,7 @@ class CDCDataService {
       }
 
       // Transform and return data
-      const parsedData = this.parseWHOData(results.data);
+      const parsedData = this.parseWHOData(results.data as WHODataRow[]);
       console.log(`Successfully fetched and parsed WHO data: ${parsedData.length} data points`);
 
       return parsedData;
