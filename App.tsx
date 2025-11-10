@@ -8,7 +8,7 @@ import { StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootStackParamList, DrawerParamList } from './src/types/navigation';
 
@@ -72,7 +72,7 @@ function HomeStack() {
   );
 }
 
-const DrawerContent = (props: any) => <CustomDrawerContent {...props} />;
+const DrawerContent = (props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />;
 
 function App() {
   return (
