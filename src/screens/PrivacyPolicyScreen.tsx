@@ -5,11 +5,11 @@
 
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
   TextStyle,
+  View,
 } from 'react-native';
 import { privacyPolicyContent } from '../content/privacyPolicy';
 

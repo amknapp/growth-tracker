@@ -5,10 +5,10 @@
 
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import { termsOfServiceContent } from '../content/termsOfService';
 

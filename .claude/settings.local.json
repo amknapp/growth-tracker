@@ -10,7 +10,17 @@
       "Bash(npm run lint:*)",
       "Bash(npx tsc:*)",
       "Bash(cat:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(dir \"C:\\Users\\amkna\\fun\\GrowthTracker\" /B)",
+      "Bash(tree:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(adb:*)",
+      "Bash(tasklist:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(wmic process where \"name like ''%qemu%'' or name like ''%emulator%''\" get ProcessId,Name,CommandLine)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

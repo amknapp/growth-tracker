@@ -3,23 +3,23 @@
  * Displays list of children profiles
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
   Alert,
   Animated,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useFocusEffect, useNavigation, DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { Child } from '../types';
 import SecureStorage from '../services/SecureStorage';
-import { getCurrentAge, formatAge } from '../utils/ageCalculator';
+import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { Colors } from '../constants/colors';
 
 interface Props {

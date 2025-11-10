@@ -3,24 +3,24 @@
  * Displays growth chart with percentile curves and child's data
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-  TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Alert,
   Animated,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { CartesianChart, Line, Scatter, AreaRange } from 'victory-native';
+import { AreaRange, CartesianChart, Line, Scatter } from 'victory-native';
 import { GrowthChartNavigationProp, GrowthChartRouteProp } from '../types/navigation';
-import { Child, Measurement, ChartStandard, GrowthChartDataPoint } from '../types';
+import { ChartStandard, Child, GrowthChartDataPoint, Measurement } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import CDCDataService from '../services/CDCDataService';
 import { calculateAgeInMonths } from '../utils/ageCalculator';
@@ -81,7 +81,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
   }, [childId, measurementType]);
 
   const loadChartData = useCallback(async () => {
-    if (!child) return;
+    if (!child) {return;}
 
     setLoadingChart(true);
     setError(null);

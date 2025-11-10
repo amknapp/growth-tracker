@@ -5,16 +5,16 @@
 
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
   Alert,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { RootStackParamList } from '../types/navigation';
@@ -53,7 +53,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const formatDate = (dateValue: Date | null): string => {
-    if (!dateValue) return '';
+    if (!dateValue) {return '';}
     const year = dateValue.getFullYear();
     const month = String(dateValue.getMonth() + 1).padStart(2, '0');
     const day = String(dateValue.getDate()).padStart(2, '0');

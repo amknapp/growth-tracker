@@ -5,16 +5,16 @@
 
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
   Alert,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { AddMeasurementNavigationProp, AddMeasurementRouteProp } from '../types/navigation';
 import { Measurement, MeasurementType } from '../types';

@@ -3,6 +3,9 @@
  * Fetches and caches official CDC growth chart data
  */
 
+/* eslint-disable no-console */
+// Console logging is intentional in this service for debugging CDC data fetching
+
 import Papa from 'papaparse';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GrowthChartDataPoint } from '../types';
@@ -107,7 +110,7 @@ class CDCDataService {
     const female: GrowthChartDataPoint[] = [];
 
     data.forEach((row: CDCDataRow) => {
-      if (!row.Sex || !row.Agemos) return; // Skip invalid rows
+      if (!row.Sex || !row.Agemos) {return;} // Skip invalid rows
 
       const point = this.transformCDCRow(row);
 
@@ -139,7 +142,7 @@ class CDCDataService {
       // WHO files use "Month" instead of "Agemos"
       const ageInMonths = row.Month !== undefined ? row.Month : row.month;
 
-      if (ageInMonths === undefined || ageInMonths === null) return; // Skip invalid rows
+      if (ageInMonths === undefined || ageInMonths === null) {return;} // Skip invalid rows
 
       points.push({
         ageInMonths: ageInMonths,
@@ -161,7 +164,7 @@ class CDCDataService {
   private async isCacheValid(cacheKey: string): Promise<boolean> {
     try {
       const lastUpdateStr = await AsyncStorage.getItem(CACHE_KEYS.LAST_UPDATE + cacheKey);
-      if (!lastUpdateStr) return false;
+      if (!lastUpdateStr) {return false;}
 
       const lastUpdate = parseInt(lastUpdateStr, 10);
       const now = Date.now();
@@ -179,7 +182,7 @@ class CDCDataService {
   private async loadFromCache(cacheKey: string): Promise<CDCDataCache | null> {
     try {
       const cachedData = await AsyncStorage.getItem(cacheKey);
-      if (!cachedData) return null;
+      if (!cachedData) {return null;}
 
       return JSON.parse(cachedData);
     } catch (error) {
