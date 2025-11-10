@@ -3,7 +3,7 @@
  * Displays list of children profiles
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   Alert,
   Animated,
@@ -21,32 +21,20 @@ import { Child } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { Colors } from '../constants/colors';
+import { useChildren } from '../hooks/useChildren'; // Import the new hook
 
 interface Props {
   navigation: HomeScreenNavigationProp;
 }
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const [children, setChildren] = useState<Child[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { children, loading, refreshChildren } = useChildren(); // Use the new hook
   const drawerNavigation = useNavigation();
-
-  const loadChildren = async () => {
-    try {
-      const childrenData = await SecureStorage.getChildren();
-      setChildren(childrenData);
-    } catch (error) {
-      console.error('Error loading children:', error);
-      Alert.alert('Error', 'Failed to load children profiles');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useFocusEffect(
     useCallback(() => {
-      loadChildren();
-    }, [])
+      refreshChildren(); // Refresh children when screen is focused
+    }, [refreshChildren])
   );
 
   const handleAddChild = () => {
@@ -72,7 +60,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           onPress: async () => {
             try {
               await SecureStorage.deleteChild(childId);
-              await loadChildren();
+              await refreshChildren(); // Refresh children after deletion
             } catch (error) {
               console.error('Error deleting child:', error);
               Alert.alert('Error', 'Failed to delete child profile');
@@ -100,6 +88,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => handleDeleteChild(childId, childName)}
+          testID={`delete-button-${childId}`} // Add testID here
         >
           <Animated.View style={{ transform: [{ scale }] }}>
             <Icon name="delete" size={28} color="#fff" />
