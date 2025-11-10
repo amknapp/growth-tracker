@@ -32,7 +32,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
 
   // Reload children when drawer opens
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus' as any, () => {
+    const unsubscribe = navigation.addListener('focus', () => {
       loadChildren();
     });
     return unsubscribe;

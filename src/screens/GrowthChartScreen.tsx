@@ -180,13 +180,24 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
     const sortedAges = Array.from(allAges).sort((a, b) => a - b);
 
     // Build data array with all percentiles
-    const percentileData = sortedAges.map(age => {
-      const dataPoint: any = { x: age };
+    type ChartDataPoint = {
+      x: number;
+      p5?: number;
+      p25?: number;
+      p50?: number;
+      p75?: number;
+      p95?: number;
+      child?: number;
+    };
+
+    const percentileData: ChartDataPoint[] = sortedAges.map(age => {
+      const dataPoint: ChartDataPoint = { x: age };
       percentilesToShow.forEach(percentile => {
         const curve = getPercentileCurve(percentile, chartData);
         const point = curve.find(p => Math.abs(p.ageInMonths - age) < 0.1);
         if (point) {
-          dataPoint[`p${percentile}`] = point.value;
+          const key = `p${percentile}` as keyof Omit<ChartDataPoint, 'x'>;
+          dataPoint[key] = point.value;
         }
       });
       return dataPoint;
@@ -402,7 +413,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
                 <CartesianChart
                   data={victoryData.data}
                   xKey="x"
-                  yKeys={victoryData.yKeys}
+                  yKeys={victoryData.yKeys as any}
                   axisOptions={{
                     tickCount: 5,
                     labelColor: Colors.primary,
@@ -412,7 +423,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
                   }}
                   domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
                 >
-                  {({ points }) => (
+                  {({ points }: any) => (
                     <>
                       {/* Percentile curves */}
                       <Line
