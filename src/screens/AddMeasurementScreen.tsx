@@ -12,8 +12,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { AddMeasurementNavigationProp, AddMeasurementRouteProp } from '../types/navigation';
 import { Measurement, MeasurementType } from '../types';
 import SecureStorage from '../services/SecureStorage';
@@ -30,13 +32,32 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [headCircumference, setHeadCircumference] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const drawerNavigation = useNavigation();
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    // On Android, the picker closes automatically after selection
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  };
+
+  const formatDate = (dateValue: Date): string => {
+    const year = dateValue.getFullYear();
+    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+    const day = String(dateValue.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handleSave = async () => {
@@ -46,16 +67,8 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
 
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
-      Alert.alert('Error', 'Please enter date in YYYY-MM-DD format');
-      return;
-    }
-
     // Validate date is not in the future
-    const measurementDate = new Date(date);
-    if (measurementDate > new Date()) {
+    if (date > new Date()) {
       Alert.alert('Error', 'Measurement date cannot be in the future');
       return;
     }
@@ -99,7 +112,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
         const newMeasurement: Measurement = {
           id: `${Date.now()}-${i}`,
           childId,
-          date,
+          date: formatDate(date),
           type: measurement.type,
           value: measurement.value,
           notes: notes.trim() || undefined,
@@ -161,14 +174,33 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
         />
 
         <Text style={styles.label}>Date</Text>
-        <TextInput
-          style={styles.input}
-          value={date}
-          onChangeText={setDate}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor="#999"
-        />
-        <Text style={styles.hint}>Format: YYYY-MM-DD</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateText}>
+            {formatDate(date)}
+          </Text>
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+            maximumDate={new Date()}
+          />
+        )}
+
+        {Platform.OS === 'ios' && showDatePicker && (
+          <TouchableOpacity
+            style={styles.doneButton}
+            onPress={() => setShowDatePicker(false)}
+          >
+            <Text style={styles.doneButtonText}>Done</Text>
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.label}>Notes (Optional)</Text>
         <TextInput
@@ -268,6 +300,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  dateButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  doneButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  doneButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   saveButton: {
     backgroundColor: Colors.primary,

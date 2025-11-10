@@ -45,6 +45,7 @@ describe('AddMeasurementScreen', () => {
     expect(getByPlaceholderText('Enter weight in kg')).toBeTruthy();
     expect(getByPlaceholderText('Enter height in cm')).toBeTruthy();
     expect(getByPlaceholderText('Enter head circumference in cm')).toBeTruthy();
+    expect(getByText('Date')).toBeTruthy(); // Date label instead of placeholder
     expect(getByText('Save Measurement')).toBeTruthy();
     expect(getByText('Cancel')).toBeTruthy();
   });
