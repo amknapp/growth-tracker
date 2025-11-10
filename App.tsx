@@ -8,7 +8,10 @@ import { StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
+import {
+  createDrawerNavigator,
+  DrawerContentComponentProps,
+} from '@react-navigation/drawer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DrawerParamList, RootStackParamList } from './src/types/navigation';
 
@@ -23,6 +26,7 @@ import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
 
 // Custom Drawer
 import CustomDrawerContent from './src/components/CustomDrawerContent';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import { Colors } from './src/constants/colors';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -72,63 +76,70 @@ function HomeStack() {
   );
 }
 
-const DrawerContent = (props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />;
+const DrawerContent = (props: DrawerContentComponentProps) => (
+  <CustomDrawerContent {...props} />
+);
 
 function App() {
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <SafeAreaProvider>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
-        <NavigationContainer>
-          <Drawer.Navigator
-            drawerContent={DrawerContent}
-            screenOptions={{
-              drawerStyle: {
-                width: 280,
-              },
-              headerShown: false,
-              swipeEnabled: false,
-            }}
-          >
-            <Drawer.Screen
-              name="HomeStack"
-              component={HomeStack}
-              options={{ title: 'Home' }}
-            />
-            <Drawer.Screen
-              name="PrivacyPolicy"
-              component={PrivacyPolicyScreen}
-              options={{
-                title: 'Privacy Policy',
-                headerShown: true,
-                headerStyle: {
-                  backgroundColor: Colors.primary,
+    <ErrorBoundary>
+      <GestureHandlerRootView style={styles.container}>
+        <SafeAreaProvider>
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor={Colors.primary}
+          />
+          <NavigationContainer>
+            <Drawer.Navigator
+              drawerContent={DrawerContent}
+              screenOptions={{
+                drawerStyle: {
+                  width: 280,
                 },
-                headerTintColor: '#fff',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
+                headerShown: false,
+                swipeEnabled: false,
               }}
-            />
-            <Drawer.Screen
-              name="TermsOfService"
-              component={TermsOfServiceScreen}
-              options={{
-                title: 'Terms of Service',
-                headerShown: true,
-                headerStyle: {
-                  backgroundColor: Colors.primary,
-                },
-                headerTintColor: '#fff',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
-              }}
-            />
-          </Drawer.Navigator>
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+            >
+              <Drawer.Screen
+                name="HomeStack"
+                component={HomeStack}
+                options={{ title: 'Home' }}
+              />
+              <Drawer.Screen
+                name="PrivacyPolicy"
+                component={PrivacyPolicyScreen}
+                options={{
+                  title: 'Privacy Policy',
+                  headerShown: true,
+                  headerStyle: {
+                    backgroundColor: Colors.primary,
+                  },
+                  headerTintColor: '#fff',
+                  headerTitleStyle: {
+                    fontWeight: 'bold',
+                  },
+                }}
+              />
+              <Drawer.Screen
+                name="TermsOfService"
+                component={TermsOfServiceScreen}
+                options={{
+                  title: 'Terms of Service',
+                  headerShown: true,
+                  headerStyle: {
+                    backgroundColor: Colors.primary,
+                  },
+                  headerTintColor: '#fff',
+                  headerTitleStyle: {
+                    fontWeight: 'bold',
+                  },
+                }}
+              />
+            </Drawer.Navigator>
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 
