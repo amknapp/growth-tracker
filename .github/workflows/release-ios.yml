@@ -150,14 +150,21 @@ jobs:
       - name: Build iOS app
         env:
           TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
         run: |
           if [ -z "$TEAM_ID" ]; then
             echo "::error::IOS_TEAM_ID secret is not set"
             exit 1
           fi
 
+          if [ -z "$PROFILE_NAME" ]; then
+            echo "::error::IOS_PROVISIONING_PROFILE_NAME secret is not set"
+            exit 1
+          fi
+
           cd ios
           echo "Building iOS app with Team ID: $TEAM_ID"
+          echo "Using provisioning profile: $PROFILE_NAME"
           xcodebuild -workspace GrowthTracker.xcworkspace \
             -scheme GrowthTracker \
             -configuration Release \
@@ -165,6 +172,7 @@ jobs:
             -archivePath $RUNNER_TEMP/GrowthTracker.xcarchive \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=$TEAM_ID \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             archive
 
       - name: Export IPA
