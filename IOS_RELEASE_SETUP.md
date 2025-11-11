@@ -30,7 +30,7 @@ The iOS release process involves:
 4. Select **App IDs** > **Continue**
 5. Configure:
    - **Description**: GrowthTracker
-   - **Bundle ID**: `com.growthtracker` (must match your app)
+   - **Bundle ID**: `com.growthtrackerapp` (must match your app)
    - **Capabilities**: Enable any needed capabilities (e.g., Push Notifications if needed)
 6. Click **Continue** > **Register**
 
@@ -93,7 +93,7 @@ Save the following for later:
 1. Go to **Certificates, Identifiers & Profiles > Profiles**
 2. Click **+** button
 3. Select **App Store** > **Continue**
-4. Select **App ID**: `com.growthtracker` > **Continue**
+4. Select **App ID**: `com.growthtrackerapp` > **Continue**
 5. Select your **Distribution Certificate** > **Continue**
 6. **Profile Name**: GrowthTracker App Store
 7. Click **Generate**
@@ -130,7 +130,7 @@ Save for later:
    - **Platforms**: iOS
    - **Name**: GrowthTracker
    - **Primary Language**: English (U.S.)
-   - **Bundle ID**: Select `com.growthtracker`
+   - **Bundle ID**: Select `com.growthtrackerapp`
    - **SKU**: `growthtracker` (unique identifier for your records)
    - **User Access**: Full Access
 4. Click **Create**
@@ -320,7 +320,7 @@ Host on Netlify, Vercel, or any web hosting service.
 - Ensure certificate hasn't expired
 
 ### "No matching provisioning profile found"
-- Verify bundle ID matches: `com.growthtracker`
+- Verify bundle ID matches: `com.growthtrackerapp`
 - Check provisioning profile includes your distribution certificate
 - Ensure profile name in secret matches actual profile name
 

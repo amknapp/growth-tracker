@@ -142,7 +142,7 @@ jobs:
             <string>manual</string>
             <key>provisioningProfiles</key>
             <dict>
-              <key>com.growthtracker</key>
+              <key>com.growthtrackerapp</key>
               <string>${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}</string>
             </dict>
           </dict>
