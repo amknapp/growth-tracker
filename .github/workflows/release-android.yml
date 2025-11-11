@@ -48,14 +48,25 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload.keystore
+          # Verify keystore was decoded successfully
+          ls -lh android/app/upload.keystore
+          echo "Keystore size: $(stat -c%s android/app/upload.keystore 2>/dev/null || stat -f%z android/app/upload.keystore) bytes"
 
       - name: Create gradle.properties
+        env:
+          STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          echo "RELEASE_STORE_FILE=release.keystore" >> android/gradle.properties
-          echo "RELEASE_STORE_PASSWORD=${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" >> android/gradle.properties
-          echo "RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}" >> android/gradle.properties
-          echo "RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}" >> android/gradle.properties
+          cat >> android/gradle.properties << EOF
+          RELEASE_STORE_FILE=upload.keystore
+          RELEASE_STORE_PASSWORD=${STORE_PASSWORD}
+          RELEASE_KEY_ALIAS=${KEY_ALIAS}
+          RELEASE_KEY_PASSWORD=${KEY_PASSWORD}
+          EOF
+          # Verify gradle.properties was created (without showing passwords)
+          echo "gradle.properties created with $(grep -c "RELEASE_" android/gradle.properties) RELEASE_* entries"
 
       - name: Update version code and name
         if: github.event_name == 'workflow_dispatch'

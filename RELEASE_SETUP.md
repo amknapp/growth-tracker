@@ -1,10 +1,20 @@
-# Google Play Store Release Setup Guide
+# App Store Release Setup Guide
 
-This guide will walk you through setting up automated releases to the Google Play Store using GitHub Actions.
+This guide will walk you through setting up automated releases to the Google Play Store (Android) and Apple App Store (iOS) using GitHub Actions.
 
 **📱 This guide assumes you're using Google Play App Signing** (recommended and already enabled for your app). If you're not sure, check Play Console > Setup > App signing.
 
 **⚠️ Note:** The Android app uses bundle ID `com.growthtracker` (already registered in Google Play Store), while iOS uses `com.growthtrackerapp`.
+
+---
+
+# Table of Contents
+1. [Android (Google Play Store)](#android-google-play-store)
+2. [iOS (Apple App Store)](#ios-apple-app-store)
+
+---
+
+# Android (Google Play Store)
 
 ## Prerequisites
 
@@ -257,3 +267,284 @@ Host a simple HTML version of your privacy policy on any web server.
 - [React Native Release Docs](https://reactnative.dev/docs/signed-apk-android)
 - [Google Play Publishing Guide](https://developer.android.com/studio/publish)
 - [Google Play Console Help](https://support.google.com/googleplay/android-developer)
+
+---
+
+# iOS (Apple App Store)
+
+## Prerequisites
+
+1. **Apple Developer Account** ($99/year)
+   - Enroll at [https://developer.apple.com/programs/](https://developer.apple.com/programs/)
+2. **Mac computer** (required for creating certificates and building iOS apps)
+3. **Xcode** installed (from Mac App Store)
+4. **App ID registered** for `com.growthtrackerapp`
+
+## Step 1: Create App Store Connect API Key
+
+This allows GitHub Actions to upload builds without your Apple ID password.
+
+### 1.1 Generate API Key
+
+1. Go to [App Store Connect](https://appstoreconnect.apple.com/)
+2. Click your name (top right) > **Keys** (under **Integrations**)
+3. Click **App Store Connect API** > **Team Keys**
+4. Click the **+** button to create a new key
+5. Enter a name: `GitHub Actions CI/CD`
+6. Set Access: **App Manager** (or **Admin** for full access)
+7. Click **Generate**
+8. **Download the .p8 file** - you can only download it once!
+9. Note the **Key ID** and **Issuer ID** (you'll need these)
+
+### 1.2 Convert API Key to Base64
+
+```bash
+# On macOS/Linux
+base64 -i AuthKey_XXXXXXXXXX.p8 -o authkey.base64
+
+# On Windows (PowerShell)
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("AuthKey_XXXXXXXXXX.p8")) | Out-File -Encoding ASCII authkey.base64
+```
+
+## Step 2: Create Signing Certificate
+
+### 2.1 Generate Certificate Signing Request (CSR)
+
+On your Mac:
+
+1. Open **Keychain Access** (Applications > Utilities > Keychain Access)
+2. Menu: **Keychain Access > Certificate Assistant > Request a Certificate From a Certificate Authority**
+3. Fill in:
+   - **User Email Address**: Your Apple ID email
+   - **Common Name**: Your name or "GrowthTracker iOS Distribution"
+   - **CA Email Address**: Leave empty
+   - Select **Saved to disk**
+4. Click **Continue** and save the `CertificateSigningRequest.certSigningRequest` file
+
+### 2.2 Create Distribution Certificate
+
+1. Go to [Apple Developer Certificates](https://developer.apple.com/account/resources/certificates/list)
+2. Click the **+** button
+3. Select **Apple Distribution** (for App Store distribution)
+4. Click **Continue**
+5. Upload the CSR file you created
+6. Click **Continue** and then **Download**
+7. Double-click the downloaded `.cer` file to install it in Keychain Access
+
+### 2.3 Export Certificate as P12
+
+1. Open **Keychain Access**
+2. In the left sidebar, select **My Certificates**
+3. Find your "Apple Distribution" certificate
+4. **Right-click** the certificate and select **Export "Apple Distribution..."**
+5. Save as: `distribution.p12`
+6. **Set a password** (you'll need this for GitHub Secrets)
+7. Click **Save**
+
+### 2.4 Convert P12 to Base64
+
+```bash
+# On macOS/Linux
+base64 -i distribution.p12 -o distribution.p12.base64
+
+# On Windows (PowerShell)
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("distribution.p12")) | Out-File -Encoding ASCII distribution.p12.base64
+```
+
+## Step 3: Create Provisioning Profile
+
+### 3.1 Register App ID (if not already done)
+
+1. Go to [Apple Developer Identifiers](https://developer.apple.com/account/resources/identifiers/list)
+2. Click the **+** button
+3. Select **App IDs** > **Continue**
+4. Select **App** > **Continue**
+5. Fill in:
+   - **Description**: GrowthTracker
+   - **Bundle ID**: Explicit - `com.growthtrackerapp`
+6. Under **Capabilities**, enable any needed capabilities (e.g., Push Notifications, HealthKit if needed)
+7. Click **Continue** and **Register**
+
+### 3.2 Create App Store Provisioning Profile
+
+1. Go to [Apple Developer Profiles](https://developer.apple.com/account/resources/profiles/list)
+2. Click the **+** button
+3. Select **App Store** (under Distribution)
+4. Click **Continue**
+5. Select your App ID: `com.growthtrackerapp`
+6. Click **Continue**
+7. Select your **Apple Distribution** certificate
+8. Click **Continue**
+9. Profile Name: `GrowthTracker App Store`
+10. Click **Generate**
+11. **Download** the `.mobileprovision` file
+
+### 3.3 Convert Provisioning Profile to Base64
+
+```bash
+# On macOS/Linux
+base64 -i GrowthTracker_App_Store.mobileprovision -o profile.mobileprovision.base64
+
+# On Windows (PowerShell)
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("GrowthTracker_App_Store.mobileprovision")) | Out-File -Encoding ASCII profile.mobileprovision.base64
+```
+
+## Step 4: Create App in App Store Connect
+
+1. Go to [App Store Connect](https://appstoreconnect.apple.com/)
+2. Click **My Apps** > **+** (plus button) > **New App**
+3. Fill in:
+   - **Platforms**: iOS
+   - **Name**: GrowthTracker
+   - **Primary Language**: English (U.S.)
+   - **Bundle ID**: Select `com.growthtrackerapp`
+   - **SKU**: `growthtracker-ios` (unique identifier for your records)
+   - **User Access**: Full Access
+4. Click **Create**
+
+### 4.1 Complete App Information
+
+Fill out all required sections:
+- **App Information**: Category, content rights, age rating
+- **Pricing and Availability**: Select countries and pricing tier (Free)
+- **App Privacy**: Privacy policy URL, data collection details
+- **App Screenshots**: Upload screenshots for required device sizes
+- **App Description**: Write compelling description
+- **Keywords**: Relevant search keywords
+- **Support URL**: Your support website or GitHub repo
+- **Marketing URL** (optional)
+
+## Step 5: Configure GitHub Secrets
+
+Go to your GitHub repository settings (Settings > Secrets and variables > Actions) and add these secrets:
+
+### Required iOS Secrets:
+
+1. **IOS_SIGNING_CERTIFICATE_P12_BASE64**
+   - The base64-encoded content of your `distribution.p12` file
+   - Paste the entire content from `distribution.p12.base64`
+
+2. **IOS_SIGNING_CERTIFICATE_PASSWORD**
+   - The password you set when exporting the P12 certificate
+
+3. **IOS_PROVISIONING_PROFILE_BASE64**
+   - The base64-encoded content of your `.mobileprovision` file
+   - Paste the entire content from `profile.mobileprovision.base64`
+
+4. **IOS_PROVISIONING_PROFILE_NAME**
+   - The exact name of your provisioning profile (e.g., "GrowthTracker App Store")
+   - You can find this by opening the `.mobileprovision` file in a text editor and searching for `<key>Name</key>`
+
+5. **IOS_TEAM_ID**
+   - Your Apple Developer Team ID (10-character string)
+   - Find it at [https://developer.apple.com/account](https://developer.apple.com/account) (Membership section)
+
+6. **APP_STORE_CONNECT_API_KEY_ID**
+   - The Key ID from Step 1.1 (e.g., "ABC123DEFG")
+
+7. **APP_STORE_CONNECT_ISSUER_ID**
+   - The Issuer ID from Step 1.1 (UUID format)
+
+8. **APP_STORE_CONNECT_API_KEY_CONTENT**
+   - The base64-encoded content of your `.p8` API key file
+   - Paste the entire content from `authkey.base64`
+
+## Step 6: Update Android Secrets (If Not Already Done)
+
+Make sure these Android secrets are also set:
+
+1. **RELEASE_KEYSTORE_BASE64**
+   ```bash
+   cat android/app/upload.keystore.base64.new
+   ```
+   Copy the entire output and paste into GitHub secret
+
+2. **RELEASE_KEYSTORE_PASSWORD**: `$h4il2m3*`
+3. **RELEASE_KEY_ALIAS**: `growthtracker-upload`
+4. **RELEASE_KEY_PASSWORD**: `$h4il2m3*`
+
+## Step 7: Create a Release
+
+### Option A: Using Git Tags (Recommended)
+
+1. Commit all changes and ensure tests pass
+2. Create and push a version tag:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+3. GitHub Actions will automatically:
+   - Build both Android (AAB/APK) and iOS (IPA)
+   - Create a GitHub release with artifacts
+   - Upload Android AAB to Google Play Store
+   - Upload iOS IPA to App Store Connect
+
+### Option B: Manual Trigger
+
+#### For iOS:
+1. Go to **Actions** > **iOS Release Build**
+2. Click **Run workflow**
+3. Enter version name (e.g., "1.0.0") and build number (e.g., "1")
+4. Click **Run workflow**
+
+#### For Android:
+1. Go to **Actions** > **Android Release Build**
+2. Click **Run workflow**
+3. Enter version name (e.g., "1.0.0") and version code (e.g., "100")
+4. Click **Run workflow**
+
+## Step 8: Monitor the Release
+
+### iOS:
+1. **GitHub Actions**: Check workflow logs for build status
+2. **App Store Connect**:
+   - Go to **My Apps** > **GrowthTracker** > **TestFlight**
+   - Your build should appear under **iOS Builds** (processing takes 5-15 minutes)
+   - Once processed, you can submit to **App Store Review**
+   - Go to **App Store** tab > **+ Version or Platform** > create version
+   - Select your build and submit for review
+
+### Android:
+1. **GitHub Actions**: Check workflow logs
+2. **Google Play Console**:
+   - Go to **Production** or **Testing** track
+   - Review should complete in 1-3 days
+
+## Troubleshooting
+
+### iOS Build Fails with "No Provisioning Profiles Found"
+- Verify `IOS_PROVISIONING_PROFILE_BASE64` is correctly set
+- Ensure the profile matches your bundle ID (`com.growthtrackerapp`)
+- Check that the profile hasn't expired
+
+### iOS Build Fails with "No Signing Certificate Found"
+- Verify `IOS_SIGNING_CERTIFICATE_P12_BASE64` is correctly set
+- Check `IOS_SIGNING_CERTIFICATE_PASSWORD` is correct
+- Ensure the certificate hasn't expired
+
+### iOS Upload Fails
+- Verify App Store Connect API credentials are correct
+- Ensure your app is created in App Store Connect
+- Check that the bundle ID matches exactly
+
+### Android Keystore Decoding Fails
+- Use `upload.keystore.base64.new` file (generated with proper encoding)
+- Ensure no extra whitespace in the GitHub secret
+- Verify the password doesn't have shell-escaping issues
+
+### Version Conflicts
+- iOS: Each build number must be unique and incrementing
+- Android: Each version code must be higher than the previous
+
+## iOS Version Management
+
+- **CFBundleShortVersionString** (Version): Marketing version (e.g., "1.0.0")
+- **CFBundleVersion** (Build): Must be incrementing integer or string (e.g., "1", "2", "3")
+- Each TestFlight/App Store upload must have a unique build number
+
+## Additional iOS Resources
+
+- [Apple Developer Documentation](https://developer.apple.com/documentation/)
+- [App Store Connect Help](https://developer.apple.com/help/app-store-connect/)
+- [Xcode Cloud vs GitHub Actions](https://developer.apple.com/xcode-cloud/)
