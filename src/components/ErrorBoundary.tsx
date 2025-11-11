@@ -10,11 +10,13 @@ import { Colors } from '../constants/colors';
 
 interface Props {
   children: ReactNode;
+  resetKey?: string; // Key to force remount on reset
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
+  resetKey: string;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -23,10 +25,22 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
+      resetKey: props.resetKey || Date.now().toString(),
     };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  componentDidUpdate(prevProps: Props): void {
+    // If resetKey changes, clear the error state
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({
+        hasError: false,
+        error: null,
+        resetKey: this.props.resetKey || Date.now().toString(),
+      });
+    }
+  }
+
+  static getDerivedStateFromError(error: Error): Partial<State> {
     // Update state so the next render will show the fallback UI
     return {
       hasError: true,
@@ -43,10 +57,11 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = (): void => {
-    // Reset the error boundary state
+    // Reset the error boundary state with a new key to force component remount
     this.setState({
       hasError: false,
       error: null,
+      resetKey: Date.now().toString(),
     });
   };
 
@@ -81,7 +96,12 @@ class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    // Use resetKey to force remount children when reset
+    return (
+      <React.Fragment key={this.state.resetKey}>
+        {this.props.children}
+      </React.Fragment>
+    );
   }
 }
 

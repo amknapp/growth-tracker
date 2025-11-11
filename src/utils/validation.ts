@@ -19,10 +19,11 @@ export function sanitizeName(name: string): string {
  */
 export function isValidName(name: string): boolean {
   const sanitized = sanitizeName(name);
-  // Allow letters, spaces, hyphens, and apostrophes
+  // Allow Unicode letters (including José, François, Müller, 中文, العربية, etc.),
+  // spaces, hyphens, and apostrophes
   // Must be at least 1 character and no more than 100
   return (
-    /^[a-zA-Z\s\-']+$/.test(sanitized) &&
+    /^[\p{L}\s\-']+$/u.test(sanitized) &&
     sanitized.length >= 1 &&
     sanitized.length <= 100
   );
