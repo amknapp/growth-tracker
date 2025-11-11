@@ -4,6 +4,8 @@ This guide will walk you through setting up automated releases to the Google Pla
 
 **📱 This guide assumes you're using Google Play App Signing** (recommended and already enabled for your app). If you're not sure, check Play Console > Setup > App signing.
 
+**⚠️ Note:** The Android app uses bundle ID `com.growthtracker` (already registered in Google Play Store), while iOS uses `com.growthtrackerapp`.
+
 ## Prerequisites
 
 1. A Google Play Developer account ($25 one-time fee)
@@ -215,7 +217,7 @@ Add version bumping scripts to your `package.json`:
 ### Upload to Play Store Fails
 - Ensure your service account has the correct permissions
 - Verify you've already created an initial release manually
-- Check that the package name matches exactly: `com.growthtrackerapp`
+- Check that the package name matches exactly: `com.growthtracker`
 
 ### Version Code Conflict
 - Each upload must have a higher version code than the previous

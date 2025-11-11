@@ -1,4 +1,4 @@
-package com.growthtrackerapp
+package com.growthtracker
 
 import android.app.Application
 import com.facebook.react.PackageList
