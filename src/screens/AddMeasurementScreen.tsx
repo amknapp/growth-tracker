@@ -54,7 +54,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleDateChange = (
-    _event: { type: string; nativeEvent: { timestamp?: number } },
+    _event: { type: string; nativeEvent: { timestamp: number } },
     selectedDate?: Date,
   ) => {
     // On Android, the picker closes automatically after selection
