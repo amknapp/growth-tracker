@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import SecureStorage from '../services/SecureStorage';
 import { Child } from '../types';
+import { logger } from '../utils/logger';
 
 interface UseChildrenResult {
   children: Child[];
@@ -21,7 +22,7 @@ export const useChildren = (): UseChildrenResult => {
       const childrenData = await SecureStorage.getChildren();
       setChildren(childrenData);
     } catch (err) {
-      console.error('Error loading children:', err);
+      logger.error('Error loading children:', err);
       setError(err as Error);
     } finally {
       setLoading(false);

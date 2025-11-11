@@ -4,6 +4,7 @@
  */
 
 import { AppData, Child, Measurement } from '../types';
+import { logger } from './logger';
 
 /**
  * Validates that a child object has all required fields
@@ -159,7 +160,7 @@ export function validateAppData(data: unknown): AppData {
   );
 
   if (orphanedMeasurements.length > 0) {
-    console.warn(
+    logger.warn(
       `Found ${orphanedMeasurements.length} orphaned measurements that will be cleaned up`,
     );
     // Filter out orphaned measurements
@@ -183,7 +184,7 @@ export function recoverAppData(data: unknown): AppData {
   try {
     return validateAppData(data);
   } catch (error) {
-    console.warn('Data validation failed, attempting recovery:', error);
+    logger.warn('Data validation failed, attempting recovery:', error);
 
     // Try to recover what we can
     const recovered: AppData = {
@@ -208,7 +209,7 @@ export function recoverAppData(data: unknown): AppData {
       }
     }
 
-    console.warn(
+    logger.warn(
       `Recovered ${recovered.children.length} children and ${recovered.measurements.length} measurements`,
     );
     return recovered;

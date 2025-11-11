@@ -15,12 +15,20 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
-import { ChildProfileNavigationProp, ChildProfileRouteProp } from '../types/navigation';
+import {
+  DrawerActions,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import {
+  ChildProfileNavigationProp,
+  ChildProfileRouteProp,
+} from '../types/navigation';
 import { Child, Measurement } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { Colors } from '../constants/colors';
+import { logger } from '../utils/logger';
 
 interface Props {
   navigation: ChildProfileNavigationProp;
@@ -37,12 +45,14 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const loadData = useCallback(async () => {
     try {
       const childData = await SecureStorage.getChild(childId);
-      const measurementsData = await SecureStorage.getMeasurementsForChild(childId);
+      const measurementsData = await SecureStorage.getMeasurementsForChild(
+        childId,
+      );
 
       setChild(childData);
       setMeasurements(measurementsData);
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
       Alert.alert('Error', 'Failed to load profile data');
     } finally {
       setLoading(false);
@@ -52,7 +62,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   const handleAddMeasurement = () => {
@@ -65,7 +75,9 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const getLatestMeasurement = (type: string): string => {
     const typedMeasurements = measurements.filter(m => m.type === type);
-    if (typedMeasurements.length === 0) {return 'No data';}
+    if (typedMeasurements.length === 0) {
+      return 'No data';
+    }
 
     const latest = typedMeasurements[typedMeasurements.length - 1];
     const unit = type === 'weight' ? 'kg' : 'cm';
@@ -104,19 +116,19 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
               await SecureStorage.deleteMeasurement(measurementId);
               await loadData();
             } catch (error) {
-              console.error('Error deleting measurement:', error);
+              logger.error('Error deleting measurement:', error);
               Alert.alert('Error', 'Failed to delete measurement');
             }
           },
         },
-      ]
+      ],
     );
   };
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>,
-    measurementId: string
+    measurementId: string,
   ) => {
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
@@ -142,10 +154,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity
-            style={styles.menuButton}
-            onPress={openDrawer}
-          >
+          <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
             <Text style={styles.menuIcon}>☰</Text>
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
@@ -201,10 +210,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={handleAddMeasurement}
-      >
+      <TouchableOpacity style={styles.addButton} onPress={handleAddMeasurement}>
         <Text style={styles.addButtonText}>+ Add Measurement</Text>
       </TouchableOpacity>
 
