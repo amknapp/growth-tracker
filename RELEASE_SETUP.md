@@ -215,7 +215,7 @@ Add version bumping scripts to your `package.json`:
 ### Upload to Play Store Fails
 - Ensure your service account has the correct permissions
 - Verify you've already created an initial release manually
-- Check that the package name matches exactly: `com.growthtracker`
+- Check that the package name matches exactly: `com.growthtrackerapp`
 
 ### Version Code Conflict
 - Each upload must have a higher version code than the previous
