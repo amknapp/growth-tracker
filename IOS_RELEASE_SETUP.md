@@ -2,6 +2,8 @@
 
 This guide will walk you through setting up automated releases to the Apple App Store using GitHub Actions.
 
+**⚠️ Note:** The iOS app uses bundle ID `com.growthtrackerapp`, while Android uses `com.growthtracker` (already registered in Google Play Store).
+
 ## Prerequisites
 
 1. **Apple Developer Account** ($99/year subscription)

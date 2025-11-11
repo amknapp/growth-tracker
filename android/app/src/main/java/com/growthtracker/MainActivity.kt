@@ -1,4 +1,4 @@
-package com.growthtrackerapp
+package com.growthtracker
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
