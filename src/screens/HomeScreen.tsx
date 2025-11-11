@@ -15,13 +15,18 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { DrawerActions, useFocusEffect, useNavigation } from '@react-navigation/native';
+import {
+  DrawerActions,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { Child } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { Colors } from '../constants/colors';
 import { useChildren } from '../hooks/useChildren'; // Import the new hook
+import { logger } from '../utils/logger';
 
 interface Props {
   navigation: HomeScreenNavigationProp;
@@ -34,7 +39,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       refreshChildren(); // Refresh children when screen is focused
-    }, [refreshChildren])
+    }, [refreshChildren]),
   );
 
   const handleAddChild = () => {
@@ -62,12 +67,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               await SecureStorage.deleteChild(childId);
               await refreshChildren(); // Refresh children after deletion
             } catch (error) {
-              console.error('Error deleting child:', error);
+              logger.error('Error deleting child:', error);
               Alert.alert('Error', 'Failed to delete child profile');
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -75,7 +80,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>,
     childId: string,
-    childName: string
+    childName: string,
   ) => {
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
@@ -141,10 +146,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={openDrawer}
-        >
+        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Growth Tracker</Text>

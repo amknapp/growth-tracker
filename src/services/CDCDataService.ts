@@ -9,6 +9,7 @@
 import Papa from 'papaparse';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GrowthChartDataPoint } from '../types';
+import { logger } from '../utils/logger';
 
 const CACHE_KEYS = {
   // CDC data
@@ -29,19 +30,27 @@ const CACHE_KEYS = {
 
 const CDC_URLS = {
   // CDC Infant datasets (birth to 36 months)
-  WEIGHT_FOR_AGE_INFANT: 'https://www.cdc.gov/growthcharts/data/zscore/wtageinf.csv',
-  HEIGHT_FOR_AGE_INFANT: 'https://www.cdc.gov/growthcharts/data/zscore/lenageinf.csv',
-  HEAD_CIRC_FOR_AGE: 'https://www.cdc.gov/growthcharts/data/zscore/hcageinf.csv',
+  WEIGHT_FOR_AGE_INFANT:
+    'https://www.cdc.gov/growthcharts/data/zscore/wtageinf.csv',
+  HEIGHT_FOR_AGE_INFANT:
+    'https://www.cdc.gov/growthcharts/data/zscore/lenageinf.csv',
+  HEAD_CIRC_FOR_AGE:
+    'https://www.cdc.gov/growthcharts/data/zscore/hcageinf.csv',
 
   // CDC Child/teen datasets (2-20 years, 24-240 months)
-  WEIGHT_FOR_AGE_CHILD: 'https://www.cdc.gov/growthcharts/data/zscore/wtage.csv',
-  HEIGHT_FOR_AGE_CHILD: 'https://www.cdc.gov/growthcharts/data/zscore/statage.csv',
+  WEIGHT_FOR_AGE_CHILD:
+    'https://www.cdc.gov/growthcharts/data/zscore/wtage.csv',
+  HEIGHT_FOR_AGE_CHILD:
+    'https://www.cdc.gov/growthcharts/data/zscore/statage.csv',
   BMI_FOR_AGE: 'https://www.cdc.gov/growthcharts/data/zscore/bmiagerev.csv',
 
   // WHO datasets (birth to 60 months, hosted by CDC)
-  WHO_WEIGHT_FOR_AGE: 'https://www.cdc.gov/growthcharts/data/who/wfa_boys_z_who.txt',
-  WHO_LENGTH_FOR_AGE: 'https://www.cdc.gov/growthcharts/data/who/lfa_boys_z_who.txt',
-  WHO_HEAD_CIRC_FOR_AGE: 'https://www.cdc.gov/growthcharts/data/who/hcfa_boys_z_who.txt',
+  WHO_WEIGHT_FOR_AGE:
+    'https://www.cdc.gov/growthcharts/data/who/wfa_boys_z_who.txt',
+  WHO_LENGTH_FOR_AGE:
+    'https://www.cdc.gov/growthcharts/data/who/lfa_boys_z_who.txt',
+  WHO_HEAD_CIRC_FOR_AGE:
+    'https://www.cdc.gov/growthcharts/data/who/hcfa_boys_z_who.txt',
 };
 
 // Cache duration: 30 days
@@ -110,7 +119,9 @@ class CDCDataService {
     const female: GrowthChartDataPoint[] = [];
 
     data.forEach((row: CDCDataRow) => {
-      if (!row.Sex || !row.Agemos) {return;} // Skip invalid rows
+      if (!row.Sex || !row.Agemos) {
+        return;
+      } // Skip invalid rows
 
       const point = this.transformCDCRow(row);
 
@@ -142,7 +153,9 @@ class CDCDataService {
       // WHO files use "Month" instead of "Agemos"
       const ageInMonths = row.Month !== undefined ? row.Month : row.month;
 
-      if (ageInMonths === undefined || ageInMonths === null) {return;} // Skip invalid rows
+      if (ageInMonths === undefined || ageInMonths === null) {
+        return;
+      } // Skip invalid rows
 
       points.push({
         ageInMonths: ageInMonths,
@@ -163,15 +176,19 @@ class CDCDataService {
    */
   private async isCacheValid(cacheKey: string): Promise<boolean> {
     try {
-      const lastUpdateStr = await AsyncStorage.getItem(CACHE_KEYS.LAST_UPDATE + cacheKey);
-      if (!lastUpdateStr) {return false;}
+      const lastUpdateStr = await AsyncStorage.getItem(
+        CACHE_KEYS.LAST_UPDATE + cacheKey,
+      );
+      if (!lastUpdateStr) {
+        return false;
+      }
 
       const lastUpdate = parseInt(lastUpdateStr, 10);
       const now = Date.now();
 
       return now - lastUpdate < CACHE_DURATION;
     } catch (error) {
-      console.error('Error checking cache validity:', error);
+      logger.error('Error checking cache validity:', error);
       return false;
     }
   }
@@ -182,11 +199,13 @@ class CDCDataService {
   private async loadFromCache(cacheKey: string): Promise<CDCDataCache | null> {
     try {
       const cachedData = await AsyncStorage.getItem(cacheKey);
-      if (!cachedData) {return null;}
+      if (!cachedData) {
+        return null;
+      }
 
       return JSON.parse(cachedData);
     } catch (error) {
-      console.error('Error loading from cache:', error);
+      logger.error('Error loading from cache:', error);
       return null;
     }
   }
@@ -194,15 +213,18 @@ class CDCDataService {
   /**
    * Save data to cache
    */
-  private async saveToCache(cacheKey: string, data: CDCDataCache): Promise<void> {
+  private async saveToCache(
+    cacheKey: string,
+    data: CDCDataCache,
+  ): Promise<void> {
     try {
       await AsyncStorage.setItem(cacheKey, JSON.stringify(data));
       await AsyncStorage.setItem(
         CACHE_KEYS.LAST_UPDATE + cacheKey,
-        Date.now().toString()
+        Date.now().toString(),
       );
     } catch (error) {
-      console.error('Error saving to cache:', error);
+      logger.error('Error saving to cache:', error);
     }
   }
 
@@ -230,16 +252,18 @@ class CDCDataService {
       });
 
       if (results.errors && results.errors.length > 0) {
-        console.warn('CSV parsing warnings:', results.errors);
+        logger.warn('CSV parsing warnings:', results.errors);
       }
 
       // Transform and return data
       const parsedData = this.parseCDCData(results.data as CDCDataRow[]);
-      console.log(`Successfully fetched and parsed CDC data: ${parsedData.male.length} male, ${parsedData.female.length} female data points`);
+      console.log(
+        `Successfully fetched and parsed CDC data: ${parsedData.male.length} male, ${parsedData.female.length} female data points`,
+      );
 
       return parsedData;
     } catch (error) {
-      console.error('Error fetching remote data:', error);
+      logger.error('Error fetching remote data:', error);
       throw error;
     }
   }
@@ -247,7 +271,9 @@ class CDCDataService {
   /**
    * Fetch WHO data from remote URL (single gender per file)
    */
-  private async fetchWHORemoteData(url: string): Promise<GrowthChartDataPoint[]> {
+  private async fetchWHORemoteData(
+    url: string,
+  ): Promise<GrowthChartDataPoint[]> {
     try {
       // Fetch CSV file from CDC FTP
       console.log(`Fetching WHO data from: ${url}`);
@@ -268,16 +294,18 @@ class CDCDataService {
       });
 
       if (results.errors && results.errors.length > 0) {
-        console.warn('CSV parsing warnings:', results.errors);
+        logger.warn('CSV parsing warnings:', results.errors);
       }
 
       // Transform and return data
       const parsedData = this.parseWHOData(results.data as WHODataRow[]);
-      console.log(`Successfully fetched and parsed WHO data: ${parsedData.length} data points`);
+      console.log(
+        `Successfully fetched and parsed WHO data: ${parsedData.length} data points`,
+      );
 
       return parsedData;
     } catch (error) {
-      console.error('Error fetching WHO remote data:', error);
+      logger.error('Error fetching WHO remote data:', error);
       throw error;
     }
   }
@@ -288,7 +316,7 @@ class CDCDataService {
    */
   private async getCDCData(
     url: string,
-    cacheKey: string
+    cacheKey: string,
   ): Promise<CDCDataCache> {
     // Check if we're already loading this data
     if (this.loadingPromises.has(cacheKey)) {
@@ -316,7 +344,7 @@ class CDCDataService {
 
         return remoteData;
       } catch (error) {
-        console.error(`Error fetching CDC data for ${cacheKey}:`, error);
+        logger.error(`Error fetching CDC data for ${cacheKey}:`, error);
 
         // Try to use expired cache as fallback
         const cachedData = await this.loadFromCache(cacheKey);
@@ -338,12 +366,17 @@ class CDCDataService {
   /**
    * Merge infant and child datasets, removing duplicates in overlap range
    */
-  private mergeDatasets(infant: GrowthChartDataPoint[], child: GrowthChartDataPoint[]): GrowthChartDataPoint[] {
+  private mergeDatasets(
+    infant: GrowthChartDataPoint[],
+    child: GrowthChartDataPoint[],
+  ): GrowthChartDataPoint[] {
     // Use infant data up to 36 months, then child data for 36+ months
     // This avoids duplicates in the 24-36 month overlap
     const infantData = (infant || []).filter(p => p.ageInMonths <= 36);
     const childData = (child || []).filter(p => p.ageInMonths > 36);
-    return [...infantData, ...childData].sort((a, b) => a.ageInMonths - b.ageInMonths);
+    return [...infantData, ...childData].sort(
+      (a, b) => a.ageInMonths - b.ageInMonths,
+    );
   }
 
   /**
@@ -351,8 +384,14 @@ class CDCDataService {
    */
   async getWeightForAgeData(): Promise<CDCDataCache> {
     const [infantData, childData] = await Promise.all([
-      this.getCDCData(CDC_URLS.WEIGHT_FOR_AGE_INFANT, CACHE_KEYS.WEIGHT_FOR_AGE_INFANT),
-      this.getCDCData(CDC_URLS.WEIGHT_FOR_AGE_CHILD, CACHE_KEYS.WEIGHT_FOR_AGE_CHILD),
+      this.getCDCData(
+        CDC_URLS.WEIGHT_FOR_AGE_INFANT,
+        CACHE_KEYS.WEIGHT_FOR_AGE_INFANT,
+      ),
+      this.getCDCData(
+        CDC_URLS.WEIGHT_FOR_AGE_CHILD,
+        CACHE_KEYS.WEIGHT_FOR_AGE_CHILD,
+      ),
     ]);
 
     return {
@@ -367,8 +406,14 @@ class CDCDataService {
    */
   async getHeightForAgeData(): Promise<CDCDataCache> {
     const [infantData, childData] = await Promise.all([
-      this.getCDCData(CDC_URLS.HEIGHT_FOR_AGE_INFANT, CACHE_KEYS.HEIGHT_FOR_AGE_INFANT),
-      this.getCDCData(CDC_URLS.HEIGHT_FOR_AGE_CHILD, CACHE_KEYS.HEIGHT_FOR_AGE_CHILD),
+      this.getCDCData(
+        CDC_URLS.HEIGHT_FOR_AGE_INFANT,
+        CACHE_KEYS.HEIGHT_FOR_AGE_INFANT,
+      ),
+      this.getCDCData(
+        CDC_URLS.HEIGHT_FOR_AGE_CHILD,
+        CACHE_KEYS.HEIGHT_FOR_AGE_CHILD,
+      ),
     ]);
 
     return {
@@ -384,7 +429,7 @@ class CDCDataService {
   async getHeadCircForAgeData(): Promise<CDCDataCache> {
     return this.getCDCData(
       CDC_URLS.HEAD_CIRC_FOR_AGE,
-      CACHE_KEYS.HEAD_CIRC_FOR_AGE
+      CACHE_KEYS.HEAD_CIRC_FOR_AGE,
     );
   }
 
@@ -394,7 +439,7 @@ class CDCDataService {
   private async getWHOData(
     boysUrl: string,
     girlsUrl: string,
-    cacheKey: string
+    cacheKey: string,
   ): Promise<CDCDataCache> {
     // Check if we're already loading
     if (this.loadingPromises.has(cacheKey)) {
@@ -431,7 +476,7 @@ class CDCDataService {
 
         return combined;
       } catch (error) {
-        console.error(`Error fetching WHO data for ${cacheKey}:`, error);
+        logger.error(`Error fetching WHO data for ${cacheKey}:`, error);
 
         // Try to use expired cache as fallback
         const cachedData = await this.loadFromCache(cacheKey);
@@ -457,7 +502,7 @@ class CDCDataService {
     return this.getWHOData(
       'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Weight-for-age-Percentiles.csv',
       'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Weight-for-age%20Percentiles.csv',
-      CACHE_KEYS.WHO_WEIGHT_FOR_AGE_INFANT
+      CACHE_KEYS.WHO_WEIGHT_FOR_AGE_INFANT,
     );
   }
 
@@ -468,7 +513,7 @@ class CDCDataService {
     return this.getWHOData(
       'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Length-for-age-Percentiles.csv',
       'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Length-for-age-Percentiles.csv',
-      CACHE_KEYS.WHO_LENGTH_FOR_AGE_INFANT
+      CACHE_KEYS.WHO_LENGTH_FOR_AGE_INFANT,
     );
   }
 
@@ -479,7 +524,7 @@ class CDCDataService {
     return this.getWHOData(
       'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Boys-Head-Circumference-for-age-Percentiles.csv',
       'https://ftp.cdc.gov/pub/Health_Statistics/NCHS/growthcharts/WHO-Girls-Head-Circumference-for-age-Percentiles.csv',
-      CACHE_KEYS.WHO_HEAD_CIRC_FOR_AGE
+      CACHE_KEYS.WHO_HEAD_CIRC_FOR_AGE,
     );
   }
 
@@ -495,7 +540,7 @@ class CDCDataService {
    */
   async getChartData(
     measurementType: string,
-    sex: 'male' | 'female'
+    sex: 'male' | 'female',
   ): Promise<GrowthChartDataPoint[]> {
     let data: CDCDataCache;
 
@@ -542,7 +587,7 @@ class CDCDataService {
         CACHE_KEYS.LAST_UPDATE + CACHE_KEYS.WHO_HEAD_CIRC_FOR_AGE,
       ]);
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      logger.error('Error clearing cache:', error);
     }
   }
 

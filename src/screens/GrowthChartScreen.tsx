@@ -19,8 +19,16 @@ import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AreaRange, CartesianChart, Line, Scatter } from 'victory-native';
-import { GrowthChartNavigationProp, GrowthChartRouteProp } from '../types/navigation';
-import { ChartStandard, Child, GrowthChartDataPoint, Measurement } from '../types';
+import {
+  GrowthChartNavigationProp,
+  GrowthChartRouteProp,
+} from '../types/navigation';
+import {
+  ChartStandard,
+  Child,
+  GrowthChartDataPoint,
+  Measurement,
+} from '../types';
 import SecureStorage from '../services/SecureStorage';
 import CDCDataService from '../services/CDCDataService';
 import { calculateAgeInMonths } from '../utils/ageCalculator';
@@ -30,13 +38,17 @@ import {
   interpretPercentile,
 } from '../utils/percentileCalculator';
 import { Colors } from '../constants/colors';
+import { logger } from '../utils/logger';
 
 interface Props {
   navigation: GrowthChartNavigationProp;
   route: GrowthChartRouteProp;
 }
 
-const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) => {
+const GrowthChartScreen: React.FC<Props> = ({
+  navigation: _navigation,
+  route,
+}) => {
   const { childId, measurementType } = route.params;
 
   const [child, setChild] = useState<Child | null>(null);
@@ -46,7 +58,9 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
   const [loading, setLoading] = useState(true);
   const [loadingChart, setLoadingChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [_chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 16);
+  const [_chartWidth, setChartWidth] = useState(
+    Dimensions.get('window').width - 16,
+  );
   const drawerNavigation = useNavigation();
 
   const openDrawer = () => {
@@ -66,13 +80,13 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
       const childData = await SecureStorage.getChild(childId);
       const measurementsData = await SecureStorage.getMeasurementsByType(
         childId,
-        measurementType
+        measurementType,
       );
 
       setChild(childData);
       setMeasurements(measurementsData);
     } catch (err) {
-      console.error('Error loading data:', err);
+      logger.error('Error loading data:', err);
       setError('Failed to load child data');
       Alert.alert('Error', 'Failed to load chart data');
     } finally {
@@ -81,7 +95,9 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
   }, [childId, measurementType]);
 
   const loadChartData = useCallback(async () => {
-    if (!child) {return;}
+    if (!child) {
+      return;
+    }
 
     setLoadingChart(true);
     setError(null);
@@ -113,10 +129,10 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
 
       setChartData(data);
     } catch (err) {
-      console.error('Error loading chart data:', err);
+      logger.error('Error loading chart data:', err);
       setError(
         'Failed to load growth chart data. Please check your internet connection. ' +
-        'Growth chart data will be cached for 30 days after the first successful download.'
+          'Growth chart data will be cached for 30 days after the first successful download.',
       );
       setChartData([]);
     } finally {
@@ -146,7 +162,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
 
     if (measurements.length > 0) {
       const childAges = measurements.map(m =>
-        calculateAgeInMonths(child.birthDate, m.date)
+        calculateAgeInMonths(child.birthDate, m.date),
       );
       const childMinAge = Math.min(...childAges);
       const childMaxAge = Math.max(...childAges);
@@ -172,7 +188,9 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
     percentilesToShow.forEach(percentile => {
       const curve = getPercentileCurve(percentile, chartData);
       curve
-        .filter(point => point.ageInMonths >= minAge && point.ageInMonths <= maxAge)
+        .filter(
+          point => point.ageInMonths >= minAge && point.ageInMonths <= maxAge,
+        )
         .forEach(point => allAges.add(point.ageInMonths));
     });
 
@@ -211,7 +229,7 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
 
     // Combine percentile data and child measurement data
     const data = [...percentileData, ...childMeasurementData].sort(
-      (a, b) => a.x - b.x
+      (a, b) => a.x - b.x,
     );
 
     return {
@@ -247,12 +265,12 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
     const latestMeasurement = measurements[measurements.length - 1];
     const ageInMonths = calculateAgeInMonths(
       child.birthDate,
-      latestMeasurement.date
+      latestMeasurement.date,
     );
     latestPercentileData = calculatePercentile(
       latestMeasurement.value,
       ageInMonths,
-      chartData
+      chartData,
     );
   }
 
@@ -290,19 +308,19 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
               await SecureStorage.deleteMeasurement(measurementId);
               await loadData();
             } catch (err) {
-              console.error('Error deleting measurement:', err);
+              logger.error('Error deleting measurement:', err);
               Alert.alert('Error', 'Failed to delete measurement');
             }
           },
         },
-      ]
+      ],
     );
   };
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>,
-    measurementId: string
+    measurementId: string,
   ) => {
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
@@ -384,7 +402,9 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
       {loadingChart && (
         <View style={styles.chartLoadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
-          <Text style={styles.chartLoadingText}>Loading growth chart data...</Text>
+          <Text style={styles.chartLoadingText}>
+            Loading growth chart data...
+          </Text>
         </View>
       )}
 
@@ -418,9 +438,9 @@ const GrowthChartScreen: React.FC<Props> = ({ navigation: _navigation, route }) 
                   axisOptions={{
                     tickCount: 5,
                     labelColor: Colors.primary,
-                    labelPosition: { x: "inset", y: "inset" },
-                    formatYLabel: (value) => `${value}`,
-                    formatXLabel: (value) => `${value}`,
+                    labelPosition: { x: 'inset', y: 'inset' },
+                    formatYLabel: value => `${value}`,
+                    formatXLabel: value => `${value}`,
                   }}
                   domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
                 >
