@@ -25,7 +25,9 @@ class SecureStorage {
       await Keychain.setGenericPassword(STORAGE_KEY, jsonData, {
         service: STORAGE_KEY,
         accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
+        // Use BIOMETRY_ANY to allow data access even if biometric data changes
+        // This prevents catastrophic data loss when users add/change fingerprints or Face ID
+        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
         securityLevel: Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
       });
     } catch (error) {

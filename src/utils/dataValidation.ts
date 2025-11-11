@@ -85,9 +85,20 @@ function isValidMeasurement(measurement: unknown): measurement is Measurement {
     return false;
   }
 
-  // Check value
-  if (typeof m.value !== 'number' || isNaN(m.value) || m.value <= 0) {
+  // Check value with type-specific ranges (matches validation.ts)
+  if (typeof m.value !== 'number' || isNaN(m.value)) {
     return false;
+  }
+
+  // Validate ranges based on measurement type
+  if (m.type === 'weight' && (m.value < 0.1 || m.value > 300)) {
+    return false; // Weight must be between 0.1kg and 300kg
+  }
+  if (m.type === 'height' && (m.value < 20 || m.value > 250)) {
+    return false; // Height must be between 20cm and 250cm
+  }
+  if (m.type === 'headCircumference' && (m.value < 20 || m.value > 100)) {
+    return false; // Head circumference must be between 20cm and 100cm
   }
 
   // Check notes (optional field)
