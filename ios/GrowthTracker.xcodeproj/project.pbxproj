@@ -11,6 +11,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		DE80C48C42704C3F10E5D766 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +90,13 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		B1C3D5E44CB34C66B707329B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -97,33 +105,6 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
-		};
-		B1C3D5E44CB34C66B707329B /* Resources */ = {
-			isa = "PBXGroup";
-			children = (
-				6A3D7D1EAAA5471DA1030BC2 /* AntDesign.ttf */,
-				3F8B3EBF34564157A9862DB3 /* Entypo.ttf */,
-				DABC5F2383DC485AA845D176 /* EvilIcons.ttf */,
-				BD1A2D60BC84439B82B8DAED /* Feather.ttf */,
-				B1934704B6C44AA98E4F4A10 /* FontAwesome.ttf */,
-				F5D01C49A0954F7C91DC9C84 /* FontAwesome5_Brands.ttf */,
-				C20652F616424F1C9157A178 /* FontAwesome5_Regular.ttf */,
-				F757B2D65C3848DEAE6AD69C /* FontAwesome5_Solid.ttf */,
-				1347C31E56D147A7B01982E6 /* FontAwesome6_Brands.ttf */,
-				14C46809AE234835976FE7C0 /* FontAwesome6_Regular.ttf */,
-				7637981AFBEC440FBBFF7280 /* FontAwesome6_Solid.ttf */,
-				51B62CCAEBC04314AC8A0712 /* Fontisto.ttf */,
-				591FC0A8166149D59E3D0DF0 /* Foundation.ttf */,
-				8C07F86ECB8340C58888A068 /* Ionicons.ttf */,
-				5BA797D33893416F9D6B4AEA /* MaterialCommunityIcons.ttf */,
-				E55AA72AA47041E6986AB001 /* MaterialIcons.ttf */,
-				2003A90716174069901349A1 /* Octicons.ttf */,
-				EA1382C38FD9498BB468235F /* SimpleLineIcons.ttf */,
-				083F1A84E0424FC4ACFD6870 /* Zocial.ttf */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-			path = "";
 		};
 /* End PBXGroup section */
 
@@ -187,6 +168,7 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				DE80C48C42704C3F10E5D766 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -217,9 +199,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-GrowthTracker/Pods-GrowthTracker-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-GrowthTracker/Pods-GrowthTracker-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -256,9 +242,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-GrowthTracker/Pods-GrowthTracker-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-GrowthTracker/Pods-GrowthTracker-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -284,6 +274,7 @@
 			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-GrowthTracker.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
@@ -299,7 +290,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.growthtrackerapp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.growthtrackerapp;
 				PRODUCT_NAME = GrowthTracker;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -312,6 +303,7 @@
 			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-GrowthTracker.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = GrowthTracker/Info.plist;
@@ -326,7 +318,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.growthtrackerapp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.growthtrackerapp;
 				PRODUCT_NAME = GrowthTracker;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -402,7 +394,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				USE_HERMES = true;
 			};
 			name = Debug;
 		};
@@ -467,7 +462,9 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
