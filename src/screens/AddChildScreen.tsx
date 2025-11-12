@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -42,15 +43,11 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [saving, setSaving] = useState(false);
   const drawerNavigation = useNavigation();
 
-
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
   };
 
-  const handleDateChange = (
-    _event: unknown,
-    selectedDate?: Date,
-  ) => {
+  const handleDateChange = (_event: unknown, selectedDate?: Date) => {
     if (selectedDate) {
       setTempDate(selectedDate);
     }
@@ -146,6 +143,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => {
+            Keyboard.dismiss();
             setTempDate(birthDate || new Date());
             setShowDatePicker(true);
           }}
@@ -164,6 +162,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
               display="inline"
               onChange={handleDateChange}
               maximumDate={new Date()}
+              themeVariant="light"
               style={styles.datePicker}
             />
             <TouchableOpacity

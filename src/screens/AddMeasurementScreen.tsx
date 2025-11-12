@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -53,10 +54,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
   };
 
-  const handleDateChange = (
-    _event: unknown,
-    selectedDate?: Date,
-  ) => {
+  const handleDateChange = (_event: unknown, selectedDate?: Date) => {
     if (selectedDate) {
       setTempDate(selectedDate);
     }
@@ -220,6 +218,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => {
+            Keyboard.dismiss();
             setTempDate(date);
             setShowDatePicker(true);
           }}
@@ -236,6 +235,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
               display="inline"
               onChange={handleDateChange}
               maximumDate={new Date()}
+              themeVariant="light"
               style={styles.datePicker}
             />
             <TouchableOpacity
