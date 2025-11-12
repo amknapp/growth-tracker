@@ -45,6 +45,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const [headCircumference, setHeadCircumference] = useState('');
   const [date, setDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const drawerNavigation = useNavigation();
@@ -54,17 +55,21 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleDateChange = (
-    _event: { type: string; nativeEvent: { timestamp: number } },
+    event: any,
     selectedDate?: Date,
   ) => {
-    // On Android, the picker closes automatically after selection
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
+    console.log('Date changed - event:', event, 'selectedDate:', selectedDate);
 
     if (selectedDate) {
-      setDate(selectedDate);
+      console.log('Setting temp date to:', selectedDate);
+      setTempDate(selectedDate);
     }
+  };
+
+  const handleDatePickerDone = () => {
+    console.log('Done pressed - committing date:', tempDate);
+    setDate(tempDate);
+    setShowDatePicker(false);
   };
 
   const formatDate = (dateValue: Date): string => {
@@ -167,7 +172,11 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      keyboardShouldPersistTaps="handled"
+      nestedScrollEnabled={true}
+    >
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
           <Text style={styles.menuIcon}>☰</Text>
@@ -215,28 +224,32 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text style={styles.label}>Date</Text>
         <TouchableOpacity
           style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => {
+            setTempDate(date);
+            setShowDatePicker(true);
+          }}
         >
           <Text style={styles.dateText}>{formatDate(date)}</Text>
         </TouchableOpacity>
 
         {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-          />
-        )}
-
-        {Platform.OS === 'ios' && showDatePicker && (
-          <TouchableOpacity
-            style={styles.doneButton}
-            onPress={() => setShowDatePicker(false)}
-          >
-            <Text style={styles.doneButtonText}>Done</Text>
-          </TouchableOpacity>
+          <>
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={tempDate}
+              mode="date"
+              display="inline"
+              onChange={handleDateChange}
+              maximumDate={new Date()}
+              style={{ width: '100%', height: 380, marginTop: 8 }}
+            />
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={handleDatePickerDone}
+            >
+              <Text style={styles.doneButtonText}>Done</Text>
+            </TouchableOpacity>
+          </>
         )}
 
         <Text style={styles.label}>Notes (Optional)</Text>
@@ -349,6 +362,10 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     color: '#333',
+  },
+  datePickerContainer: {
+    marginTop: 8,
+    overflow: 'hidden',
   },
   doneButton: {
     backgroundColor: Colors.primary,
