@@ -37,7 +37,7 @@ import {
   getPercentileCurve,
   interpretPercentile,
 } from '../utils/percentileCalculator';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../hooks/useTheme';
 import { logger } from '../utils/logger';
 
 interface Props {
@@ -62,6 +62,7 @@ const GrowthChartScreen: React.FC<Props> = ({
     Dimensions.get('window').width - 16,
   );
   const drawerNavigation = useNavigation();
+  const { colors } = useTheme();
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
@@ -241,6 +242,8 @@ const GrowthChartScreen: React.FC<Props> = ({
   }, [child, chartData, measurements]);
 
   const victoryData = useMemo(() => prepareVictoryData(), [prepareVictoryData]);
+
+  const styles = getStyles(colors);
 
   if (loading) {
     return (
@@ -437,7 +440,7 @@ const GrowthChartScreen: React.FC<Props> = ({
                   yKeys={victoryData.yKeys as any}
                   axisOptions={{
                     tickCount: 5,
-                    labelColor: Colors.primary,
+                    labelColor: colors.primary,
                     labelPosition: { x: 'inset', y: 'inset' },
                     formatYLabel: value => `${value}`,
                     formatXLabel: value => `${value}`,
@@ -508,7 +511,7 @@ const GrowthChartScreen: React.FC<Props> = ({
                         radius={6}
                         shape="circle"
                         style="fill"
-                        color={Colors.primary}
+                        color={colors.primary}
                       />
                     </>
                   )}
@@ -570,275 +573,276 @@ const GrowthChartScreen: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: Colors.primary,
-    padding: 20,
-    paddingTop: 60,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  menuButton: {
-    marginRight: 12,
-    padding: 4,
-  },
-  menuIcon: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  headerTitleContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  standardToggle: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  standardButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#fff',
-    alignItems: 'center',
-  },
-  standardButtonSelected: {
-    backgroundColor: '#fff',
-  },
-  standardButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  standardButtonTextSelected: {
-    color: Colors.primary,
-  },
-  statsCard: {
-    backgroundColor: '#fff',
-    margin: 16,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statsTitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  statsValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  statsPercentile: {
-    fontSize: 18,
-    color: Colors.primary,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  statsInterpretation: {
-    fontSize: 14,
-    color: '#666',
-  },
-  chartContainer: {
-    backgroundColor: '#fff',
-    margin: 16,
-    marginTop: 0,
-    paddingVertical: 16,
-    paddingRight: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-    paddingLeft: 16,
-  },
-  emptyChart: {
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyChartText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
-  },
-  emptyChartSubtext: {
-    fontSize: 14,
-    color: '#999',
-  },
-  legend: {
-    marginTop: 16,
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  legendTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.primary,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  legendItems: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendLine: {
-    width: 20,
-    height: 1,
-    backgroundColor: '#ccc',
-  },
-  legendLineGray: {
-    width: 20,
-    height: 1,
-    backgroundColor: '#aaa',
-  },
-  legendLineDarkGray: {
-    width: 20,
-    height: 2,
-    backgroundColor: '#666',
-  },
-  legendCircle: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.primary,
-  },
-  legendText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  measurementsList: {
-    backgroundColor: '#fff',
-    margin: 16,
-    marginTop: 0,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  measurementsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  measurementItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  measurementDate: {
-    fontSize: 14,
-    color: '#666',
-  },
-  measurementValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  deleteButtonContainer: {
-    justifyContent: 'center',
-  },
-  deleteButton: {
-    backgroundColor: Colors.error,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    height: '100%',
-    borderRadius: 0,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 100,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorBanner: {
-    backgroundColor: '#FFF3CD',
-    borderLeftWidth: 4,
-    borderLeftColor: '#FFA500',
-    padding: 12,
-    margin: 16,
-    borderRadius: 8,
-  },
-  errorBannerText: {
-    fontSize: 14,
-    color: '#856404',
-  },
-  chartLoadingContainer: {
-    backgroundColor: '#fff',
-    margin: 16,
-    padding: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  chartLoadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  chartCanvasContainer: {
-    height: 350,
-    width: '100%',
-  },
-});
+const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      backgroundColor: colors.primary,
+      padding: 20,
+      paddingTop: 60,
+    },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    menuButton: {
+      marginRight: 12,
+      padding: 4,
+    },
+    menuIcon: {
+      fontSize: 28,
+      color: '#fff',
+      fontWeight: 'bold',
+    },
+    headerTitleContainer: {
+      flex: 1,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#fff',
+    },
+    standardToggle: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    standardButton: {
+      flex: 1,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#fff',
+      alignItems: 'center',
+    },
+    standardButtonSelected: {
+      backgroundColor: '#fff',
+    },
+    standardButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#fff',
+    },
+    standardButtonTextSelected: {
+      color: colors.primary,
+    },
+    statsCard: {
+      backgroundColor: colors.card,
+      margin: 16,
+      padding: 20,
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    statsTitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 8,
+    },
+    statsValue: {
+      fontSize: 32,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    statsPercentile: {
+      fontSize: 18,
+      color: colors.primary,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    statsInterpretation: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    chartContainer: {
+      backgroundColor: colors.card,
+      margin: 16,
+      marginTop: 0,
+      paddingVertical: 16,
+      paddingRight: 16,
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    chartTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+      paddingLeft: 16,
+    },
+    emptyChart: {
+      height: 200,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyChartText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginBottom: 8,
+    },
+    emptyChartSubtext: {
+      fontSize: 14,
+      color: colors.textLight,
+    },
+    legend: {
+      marginTop: 16,
+      paddingTop: 16,
+      paddingHorizontal: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    legendTitle: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.primary,
+      marginBottom: 8,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    legendItems: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    legendLine: {
+      width: 20,
+      height: 1,
+      backgroundColor: '#ccc',
+    },
+    legendLineGray: {
+      width: 20,
+      height: 1,
+      backgroundColor: '#aaa',
+    },
+    legendLineDarkGray: {
+      width: 20,
+      height: 2,
+      backgroundColor: '#666',
+    },
+    legendCircle: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.primary,
+    },
+    legendText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    measurementsList: {
+      backgroundColor: colors.card,
+      margin: 16,
+      marginTop: 0,
+      padding: 16,
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    measurementsTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    measurementItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      paddingHorizontal: 4,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    measurementDate: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    measurementValue: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    deleteButtonContainer: {
+      justifyContent: 'center',
+    },
+    deleteButton: {
+      backgroundColor: colors.error,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 80,
+      height: '100%',
+      borderRadius: 0,
+    },
+    errorText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 100,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+    errorBanner: {
+      backgroundColor: '#FFF3CD',
+      borderLeftWidth: 4,
+      borderLeftColor: '#FFA500',
+      padding: 12,
+      margin: 16,
+      borderRadius: 8,
+    },
+    errorBannerText: {
+      fontSize: 14,
+      color: '#856404',
+    },
+    chartLoadingContainer: {
+      backgroundColor: colors.card,
+      margin: 16,
+      padding: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    chartLoadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+    chartCanvasContainer: {
+      height: 350,
+      width: '100%',
+    },
+  });
 
 export default GrowthChartScreen;
