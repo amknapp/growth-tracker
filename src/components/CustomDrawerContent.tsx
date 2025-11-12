@@ -32,6 +32,14 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     return unsubscribe;
   }, [navigation, refreshChildren]);
 
+  // Also reload children when navigation state changes (e.g., after adding a child)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('state', () => {
+      refreshChildren(); // Refresh children when navigation state changes
+    });
+    return unsubscribe;
+  }, [navigation, refreshChildren]);
+
   const handleChildPress = (childId: string) => {
     // Navigate to the child's profile within the HomeStack
     navigation.dispatch(
