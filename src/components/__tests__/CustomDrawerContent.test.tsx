@@ -16,11 +16,28 @@ jest.mock('@react-navigation/native', () => ({
     addListener: jest.fn(() => jest.fn()),
   }),
   CommonActions: {
-    navigate: jest.fn((params) => params),
+    navigate: jest.fn(params => params),
   },
 }));
 jest.mock('@react-navigation/drawer', () => ({
   DrawerContentScrollView: ({ children }: any) => children,
+}));
+jest.mock('../../hooks/useTheme', () => ({
+  useTheme: () => ({
+    colors: {
+      primary: '#7E57C2',
+      primaryLight: '#B39DDB',
+      background: '#f5f5f5',
+      card: '#fff',
+      text: '#333',
+      textSecondary: '#666',
+      textLight: '#999',
+      border: '#e0e0e0',
+      error: '#FF3B30',
+    },
+    isDark: false,
+    colorScheme: 'light',
+  }),
 }));
 
 describe('CustomDrawerContent', () => {
@@ -98,7 +115,7 @@ describe('CustomDrawerContent', () => {
 
   it('should display loading state', () => {
     (SecureStorage.getChildren as jest.Mock).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
+      () => new Promise(() => {}), // Never resolves
     );
 
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
@@ -155,7 +172,9 @@ describe('CustomDrawerContent', () => {
     const termsButton = getByText('Terms of Service');
     fireEvent.press(termsButton);
 
-    expect(mockProps.navigation.navigate).toHaveBeenCalledWith('TermsOfService');
+    expect(mockProps.navigation.navigate).toHaveBeenCalledWith(
+      'TermsOfService',
+    );
   });
 
   it('should display footer with version and data storage info', async () => {

@@ -4,12 +4,7 @@
  */
 
 import React, { useEffect } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   DrawerContentComponentProps,
   DrawerContentScrollView,
@@ -17,12 +12,13 @@ import {
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../hooks/useTheme';
 import { useChildren } from '../hooks/useChildren'; // Import the new hook
 
-const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
+const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
   const { children, loading, refreshChildren } = useChildren(); // Use the new hook
   const navigation = useNavigation();
+  const { colors } = useTheme();
 
   // Reload children when drawer opens
   useEffect(() => {
@@ -49,7 +45,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
           screen: 'ChildProfile',
           params: { childId },
         },
-      })
+      }),
     );
     props.navigation.closeDrawer();
   };
@@ -61,7 +57,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         params: {
           screen: 'Home',
         },
-      })
+      }),
     );
     props.navigation.closeDrawer();
   };
@@ -74,9 +70,14 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     props.navigation.navigate('TermsOfService');
   };
 
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.container}>
-      <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
+      <DrawerContentScrollView
+        {...props}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.appTitle}>Growth Tracker</Text>
@@ -84,7 +85,12 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
 
         {/* Home Button */}
         <TouchableOpacity style={styles.menuItem} onPress={handleHomePress}>
-          <Icon name="home" size={24} color="#333" style={styles.menuIcon} />
+          <Icon
+            name="home"
+            size={24}
+            color={colors.text}
+            style={styles.menuIcon}
+          />
           <Text style={styles.menuText}>Home</Text>
         </TouchableOpacity>
 
@@ -97,7 +103,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
           {loading ? (
             <Text style={styles.loadingText}>Loading...</Text>
           ) : children.length > 0 ? (
-            children.map((child) => {
+            children.map(child => {
               const age = getCurrentAge(child.birthDate);
               const ageText = formatAge(age);
               return (
@@ -110,7 +116,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                     <Icon
                       name={child.sex === 'male' ? 'face' : 'face'}
                       size={20}
-                      color={Colors.primary}
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.childInfo}>
@@ -131,12 +137,25 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         {/* Settings/Legal Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Legal</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={handlePrivacyPress}>
-            <Icon name="lock" size={24} color="#333" style={styles.menuIcon} />
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={handlePrivacyPress}
+          >
+            <Icon
+              name="lock"
+              size={24}
+              color={colors.text}
+              style={styles.menuIcon}
+            />
             <Text style={styles.menuText}>Privacy Policy</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem} onPress={handleTermsPress}>
-            <Icon name="description" size={24} color="#333" style={styles.menuIcon} />
+            <Icon
+              name="description"
+              size={24}
+              color={colors.text}
+              style={styles.menuIcon}
+            />
             <Text style={styles.menuText}>Terms of Service</Text>
           </TouchableOpacity>
         </View>
@@ -145,127 +164,130 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Growth Tracker v1.0</Text>
-        <Text style={styles.footerSubtext}>Data stored locally on your device</Text>
+        <Text style={styles.footerSubtext}>
+          Data stored locally on your device
+        </Text>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  header: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 30,
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  appTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  section: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-    textTransform: 'uppercase',
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  menuIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  menuText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  childItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#f8f8f8',
-    marginBottom: 8,
-  },
-  childIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E8F4FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  childIconText: {
-    fontSize: 20,
-  },
-  childInfo: {
-    flex: 1,
-  },
-  childName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  childAge: {
-    fontSize: 13,
-    color: '#666',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 8,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#999',
-    paddingHorizontal: 12,
-    fontStyle: 'italic',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#999',
-    paddingHorizontal: 12,
-    fontStyle: 'italic',
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: '#f8f8f8',
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  footerSubtext: {
-    fontSize: 11,
-    color: '#999',
-  },
-});
+const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.card,
+    },
+    scrollContent: {
+      paddingBottom: 20,
+    },
+    header: {
+      backgroundColor: colors.primary,
+      paddingVertical: 30,
+      paddingHorizontal: 20,
+      marginBottom: 10,
+    },
+    appTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#fff',
+    },
+    section: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textLight,
+      textTransform: 'uppercase',
+      marginBottom: 12,
+      paddingHorizontal: 4,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      marginBottom: 4,
+    },
+    menuIcon: {
+      fontSize: 20,
+      marginRight: 12,
+    },
+    menuText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    childItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      backgroundColor: colors.background,
+      marginBottom: 8,
+    },
+    childIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.primaryLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    childIconText: {
+      fontSize: 20,
+    },
+    childInfo: {
+      flex: 1,
+    },
+    childName: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    childAge: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: 8,
+    },
+    loadingText: {
+      fontSize: 14,
+      color: colors.textLight,
+      paddingHorizontal: 12,
+      fontStyle: 'italic',
+    },
+    emptyText: {
+      fontSize: 14,
+      color: colors.textLight,
+      paddingHorizontal: 12,
+      fontStyle: 'italic',
+    },
+    footer: {
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      backgroundColor: colors.background,
+    },
+    footerText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    footerSubtext: {
+      fontSize: 11,
+      color: colors.textLight,
+    },
+  });
 
 export default CustomDrawerContent;
