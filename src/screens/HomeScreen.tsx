@@ -8,7 +8,6 @@ import {
   Alert,
   Animated,
   FlatList,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -21,6 +20,7 @@ import {
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { Child } from '../types';
 import SecureStorage from '../services/SecureStorage';
@@ -36,6 +36,7 @@ interface Props {
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { children, loading, refreshChildren } = useChildren(); // Use the new hook
   const drawerNavigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
 
   useFocusEffect(
@@ -164,7 +165,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         ListEmptyComponent={!loading ? renderEmptyState : null}
       />
 
-      <TouchableOpacity style={styles.addButton} onPress={handleAddChild}>
+      <TouchableOpacity
+        style={[
+          styles.addButton,
+          { marginBottom: Math.max(insets.bottom, 16) },
+        ]}
+        onPress={handleAddChild}
+      >
         <Text style={styles.addButtonText}>+ Add Child</Text>
       </TouchableOpacity>
     </View>
@@ -260,7 +267,6 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       borderRadius: 12,
       marginHorizontal: 16,
     marginTop: 16,
-    marginBottom: Platform.OS === 'ios' ? 34 : 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
