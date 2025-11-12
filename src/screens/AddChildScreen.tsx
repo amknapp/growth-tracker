@@ -6,7 +6,6 @@
 import React, { useState } from 'react';
 import {
   Alert,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -43,26 +42,21 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [saving, setSaving] = useState(false);
   const drawerNavigation = useNavigation();
 
-  console.log('AddChildScreen - showDatePicker:', showDatePicker, 'birthDate:', birthDate);
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
   };
 
   const handleDateChange = (
-    event: any,
+    _event: unknown,
     selectedDate?: Date,
   ) => {
-    console.log('Date changed - event:', event, 'selectedDate:', selectedDate);
-
     if (selectedDate) {
-      console.log('Setting temp date to:', selectedDate);
       setTempDate(selectedDate);
     }
   };
 
   const handleDatePickerDone = () => {
-    console.log('Done pressed - committing birthDate:', tempDate);
     setBirthDate(tempDate);
     setShowDatePicker(false);
   };
@@ -170,7 +164,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
               display="inline"
               onChange={handleDateChange}
               maximumDate={new Date()}
-              style={{ width: '100%', height: 380, marginTop: 8 }}
+              style={styles.datePicker}
             />
             <TouchableOpacity
               style={styles.doneButton}
@@ -307,9 +301,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
   },
-  datePickerContainer: {
+  datePicker: {
+    width: '100%',
+    height: 380,
     marginTop: 8,
-    overflow: 'hidden',
   },
   doneButton: {
     backgroundColor: Colors.primary,

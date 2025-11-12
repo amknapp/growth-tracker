@@ -154,6 +154,10 @@ describe('AddChildScreen', () => {
     const datePicker = getByTestId('dateTimePicker');
     fireEvent.press(datePicker); // This triggers onChange with the current value
 
+    // Click Done button to commit the date
+    const doneButton = getByText('Done');
+    fireEvent.press(doneButton);
+
     const saveButton = getByText('Save Child Profile');
     fireEvent.press(saveButton);
 
@@ -192,6 +196,10 @@ describe('AddChildScreen', () => {
     const datePicker = getByTestId('dateTimePicker');
     fireEvent.press(datePicker);
 
+    // Click Done button to commit the date
+    const doneButton = getByText('Done');
+    fireEvent.press(doneButton);
+
     const girlButton = getByText('Girl');
     fireEvent.press(girlButton);
 
@@ -229,6 +237,10 @@ describe('AddChildScreen', () => {
     fireEvent.press(dateButton);
     const datePicker = getByTestId('dateTimePicker');
     fireEvent.press(datePicker);
+
+    // Click Done button to commit the date
+    const doneButton = getByText('Done');
+    fireEvent.press(doneButton);
 
     const saveButton = getByText('Save Child Profile');
     fireEvent.press(saveButton);
@@ -272,6 +284,10 @@ describe('AddChildScreen', () => {
     const datePicker = getByTestId('dateTimePicker');
     fireEvent.press(datePicker);
 
+    // Click Done button to commit the date
+    const doneButton = getByText('Done');
+    fireEvent.press(doneButton);
+
     const saveButton = getByText('Save Child Profile');
     fireEvent.press(saveButton);
 
@@ -305,6 +321,10 @@ describe('AddChildScreen', () => {
     fireEvent.press(dateButton);
     const datePicker = getByTestId('dateTimePicker');
     fireEvent.press(datePicker);
+
+    // Click Done button to commit the date
+    const doneButton = getByText('Done');
+    fireEvent.press(doneButton);
 
     const saveButton = getByText('Save Child Profile');
     fireEvent.press(saveButton);
