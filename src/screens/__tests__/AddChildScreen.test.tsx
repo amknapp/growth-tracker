@@ -20,6 +20,23 @@ jest.mock('@react-navigation/native', () => ({
   },
 }));
 
+jest.mock('../../hooks/useTheme', () => ({
+  useTheme: () => ({
+    colors: {
+      primary: '#7E57C2',
+      background: '#f5f5f5',
+      card: '#fff',
+      text: '#333',
+      textSecondary: '#666',
+      textLight: '#999',
+      border: '#e0e0e0',
+      error: '#FF3B30',
+    },
+    isDark: false,
+    colorScheme: 'light',
+  }),
+}));
+
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 
@@ -41,7 +58,7 @@ describe('AddChildScreen', () => {
 
   it('should render correctly', () => {
     const { getByText, getByPlaceholderText } = render(
-      <AddChildScreen navigation={mockNavigation} />
+      <AddChildScreen navigation={mockNavigation} />,
     );
 
     expect(getByText('Add Child')).toBeTruthy();
@@ -55,7 +72,7 @@ describe('AddChildScreen', () => {
 
   it('should allow entering name', () => {
     const { getByPlaceholderText } = render(
-      <AddChildScreen navigation={mockNavigation} />
+      <AddChildScreen navigation={mockNavigation} />,
     );
 
     const nameInput = getByPlaceholderText("Enter child's name");
@@ -66,7 +83,7 @@ describe('AddChildScreen', () => {
 
   it('should allow selecting birth date', () => {
     const { getByText, getByTestId, queryByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
+      <AddChildScreen navigation={mockNavigation} />,
     );
 
     // Click the date button to show picker
@@ -87,7 +104,7 @@ describe('AddChildScreen', () => {
 
   it('should allow selecting sex', () => {
     const { getByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
+      <AddChildScreen navigation={mockNavigation} />,
     );
 
     const girlButton = getByText('Girl');
@@ -104,7 +121,7 @@ describe('AddChildScreen', () => {
 
   it('should show error when name is empty', async () => {
     const { getByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
+      <AddChildScreen navigation={mockNavigation} />,
     );
 
     // We can skip selecting a date for this test since name validation comes first
@@ -119,7 +136,7 @@ describe('AddChildScreen', () => {
 
   it('should show error when birth date is not selected', async () => {
     const { getByText, getByPlaceholderText } = render(
-      <AddChildScreen navigation={mockNavigation} />
+      <AddChildScreen navigation={mockNavigation} />,
     );
 
     const nameInput = getByPlaceholderText("Enter child's name");
@@ -129,7 +146,10 @@ describe('AddChildScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please select a birth date');
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Error',
+        'Please select a birth date',
+      );
     });
   });
 
@@ -139,9 +159,8 @@ describe('AddChildScreen', () => {
   it('should save child successfully', async () => {
     (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
-    );
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } =
+      render(<AddChildScreen navigation={mockNavigation} />);
 
     const nameInput = getByPlaceholderText("Enter child's name");
     fireEvent.changeText(nameInput, 'John Doe');
@@ -166,12 +185,12 @@ describe('AddChildScreen', () => {
         expect.objectContaining({
           name: 'John Doe',
           sex: 'male', // Default
-        })
+        }),
       );
       expect(Alert.alert).toHaveBeenCalledWith(
         'Success',
         'Child profile added successfully',
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -184,9 +203,8 @@ describe('AddChildScreen', () => {
   it('should save child with female sex', async () => {
     (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
-    );
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } =
+      render(<AddChildScreen navigation={mockNavigation} />);
 
     const nameInput = getByPlaceholderText("Enter child's name");
     fireEvent.changeText(nameInput, 'Jane Doe');
@@ -211,7 +229,7 @@ describe('AddChildScreen', () => {
         expect.objectContaining({
           name: 'Jane Doe',
           sex: 'female',
-        })
+        }),
       );
     });
 
@@ -223,12 +241,11 @@ describe('AddChildScreen', () => {
 
   it('should handle save error', async () => {
     (SecureStorage.addChild as jest.Mock).mockRejectedValue(
-      new Error('Storage error')
+      new Error('Storage error'),
     );
 
-    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
-    );
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } =
+      render(<AddChildScreen navigation={mockNavigation} />);
 
     const nameInput = getByPlaceholderText("Enter child's name");
     fireEvent.changeText(nameInput, 'John Doe');
@@ -248,7 +265,7 @@ describe('AddChildScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
-        'Failed to save child profile'
+        'Failed to save child profile',
       );
     });
 
@@ -256,11 +273,11 @@ describe('AddChildScreen', () => {
     await waitFor(() => {
       expect(queryByText('Saving...')).toBeNull();
     });
-  })
+  });
 
   it('should call goBack when cancel is pressed', () => {
     const { getByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
+      <AddChildScreen navigation={mockNavigation} />,
     );
 
     const cancelButton = getByText('Cancel');
@@ -272,9 +289,8 @@ describe('AddChildScreen', () => {
   it('should trim whitespace from name', async () => {
     (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
 
-    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
-    );
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } =
+      render(<AddChildScreen navigation={mockNavigation} />);
 
     const nameInput = getByPlaceholderText("Enter child's name");
     fireEvent.changeText(nameInput, '  John Doe  ');
@@ -295,7 +311,7 @@ describe('AddChildScreen', () => {
       expect(SecureStorage.addChild).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'John Doe', // Trimmed
-        })
+        }),
       );
     });
 
@@ -307,12 +323,11 @@ describe('AddChildScreen', () => {
 
   it('should disable save button while saving', async () => {
     (SecureStorage.addChild as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
+      () => new Promise(resolve => setTimeout(resolve, 100)),
     );
 
-    const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
-      <AddChildScreen navigation={mockNavigation} />
-    );
+    const { getByText, getByPlaceholderText, getByTestId, queryByText } =
+      render(<AddChildScreen navigation={mockNavigation} />);
 
     const nameInput = getByPlaceholderText("Enter child's name");
     fireEvent.changeText(nameInput, 'John Doe');

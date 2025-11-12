@@ -23,7 +23,7 @@ import {
 } from '../types/navigation';
 import { Measurement, MeasurementType } from '../types';
 import SecureStorage from '../services/SecureStorage';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../hooks/useTheme';
 import {
   getValidationErrorMessage,
   isValidDate,
@@ -49,6 +49,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const drawerNavigation = useNavigation();
+  const { colors, colorScheme } = useTheme();
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
@@ -164,6 +165,8 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const styles = getStyles(colors);
+
   return (
     <ScrollView
       style={styles.container}
@@ -190,7 +193,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           value={weight}
           onChangeText={setWeight}
           placeholder="Enter weight in kg"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textLight}
           keyboardType="decimal-pad"
         />
 
@@ -200,7 +203,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           value={height}
           onChangeText={setHeight}
           placeholder="Enter height in cm"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textLight}
           keyboardType="decimal-pad"
         />
 
@@ -210,7 +213,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           value={headCircumference}
           onChangeText={setHeadCircumference}
           placeholder="Enter head circumference in cm"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textLight}
           keyboardType="decimal-pad"
         />
 
@@ -235,7 +238,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
               display="inline"
               onChange={handleDateChange}
               maximumDate={new Date()}
-              themeVariant="light"
+              themeVariant={colorScheme}
               style={styles.datePicker}
             />
             <TouchableOpacity
@@ -253,7 +256,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           value={notes}
           onChangeText={setNotes}
           placeholder="Add any notes about this measurement"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textLight}
           multiline
           numberOfLines={3}
         />
@@ -279,131 +282,132 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: Colors.primary,
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuButton: {
-    marginRight: 16,
-    padding: 4,
-  },
-  menuIcon: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  content: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  notesInput: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  hint: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  dateButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  dateText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  datePicker: {
-    width: '100%',
-    height: 380,
-    marginTop: 8,
-  },
-  doneButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  doneButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  cancelButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 16,
-  },
-});
+const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      backgroundColor: colors.primary,
+      paddingTop: 60,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    menuButton: {
+      marginRight: 16,
+      padding: 4,
+    },
+    menuIcon: {
+      fontSize: 28,
+      color: '#fff',
+      fontWeight: 'bold',
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#fff',
+    },
+    content: {
+      padding: 20,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    sectionSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 16,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+      marginTop: 16,
+    },
+    input: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: colors.text,
+    },
+    notesInput: {
+      height: 80,
+      textAlignVertical: 'top',
+    },
+    hint: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    dateButton: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    dateText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    datePicker: {
+      width: '100%',
+      height: 380,
+      marginTop: 8,
+    },
+    doneButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    doneButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginTop: 32,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    saveButtonDisabled: {
+      backgroundColor: colors.textLight,
+    },
+    saveButtonText: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    cancelButton: {
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    cancelButtonText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+  });
 
 export default AddMeasurementScreen;

@@ -42,6 +42,23 @@ jest.mock('react-native-vector-icons/MaterialIcons', () => {
   );
 });
 
+jest.mock('../../hooks/useTheme', () => ({
+  useTheme: () => ({
+    colors: {
+      primary: '#7E57C2',
+      background: '#f5f5f5',
+      card: '#fff',
+      text: '#333',
+      textSecondary: '#666',
+      textLight: '#999',
+      border: '#e0e0e0',
+      error: '#FF3B30',
+    },
+    isDark: false,
+    colorScheme: 'light',
+  }),
+}));
+
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 jest.mock('react-native-gesture-handler', () => {
