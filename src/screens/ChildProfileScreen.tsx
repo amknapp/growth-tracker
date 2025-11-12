@@ -27,7 +27,7 @@ import {
 import { Child, Measurement } from '../types';
 import SecureStorage from '../services/SecureStorage';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
-import { Colors } from '../constants/colors';
+import { useTheme } from '../hooks/useTheme';
 import { logger } from '../utils/logger';
 
 interface Props {
@@ -41,6 +41,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [_loading, setLoading] = useState(true);
   const drawerNavigation = useNavigation();
+  const { colors } = useTheme();
 
   const loadData = useCallback(async () => {
     try {
@@ -83,6 +84,8 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
     const unit = type === 'weight' ? 'kg' : 'cm';
     return `${latest.value.toFixed(1)} ${unit}`;
   };
+
+  const styles = getStyles(colors);
 
   if (!child) {
     return (
@@ -255,159 +258,160 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: Colors.primary,
-    padding: 20,
-    paddingTop: 60,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  menuButton: {
-    padding: 4,
-    marginRight: 12,
-  },
-  menuIcon: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  headerTitleContainer: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  details: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.9,
-    marginBottom: 4,
-  },
-  birthDate: {
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.8,
-  },
-  section: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  measurementCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  measurementInfo: {
-    flex: 1,
-  },
-  measurementLabel: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 4,
-  },
-  measurementValue: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-  },
-  chevron: {
-    fontSize: 24,
-    color: '#ccc',
-  },
-  addButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  historyCard: {
-    backgroundColor: '#fff',
-    padding: 12,
-    marginBottom: 8,
-    borderRadius: 8,
-  },
-  historyDate: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  historyType: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  historyValue: {
-    fontSize: 16,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  historyNotes: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-    fontStyle: 'italic',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 100,
-  },
-  deleteButtonContainer: {
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  deleteButton: {
-    backgroundColor: Colors.error,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    height: '100%',
-    borderRadius: 8,
-  },
-});
+const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      backgroundColor: colors.primary,
+      padding: 20,
+      paddingTop: 60,
+    },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    menuButton: {
+      padding: 4,
+      marginRight: 12,
+    },
+    menuIcon: {
+      fontSize: 28,
+      color: '#fff',
+      fontWeight: 'bold',
+    },
+    headerTitleContainer: {
+      flex: 1,
+    },
+    name: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: '#fff',
+    },
+    details: {
+      fontSize: 16,
+      color: '#fff',
+      opacity: 0.9,
+      marginBottom: 4,
+    },
+    birthDate: {
+      fontSize: 14,
+      color: '#fff',
+      opacity: 0.8,
+    },
+    section: {
+      padding: 16,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    measurementCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      padding: 16,
+      marginBottom: 8,
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    measurementInfo: {
+      flex: 1,
+    },
+    measurementLabel: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      marginBottom: 4,
+    },
+    measurementValue: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    chevron: {
+      fontSize: 24,
+      color: colors.textLight,
+    },
+    addButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+      marginHorizontal: 16,
+      marginBottom: 16,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    addButtonText: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    historyCard: {
+      backgroundColor: colors.card,
+      padding: 12,
+      marginBottom: 8,
+      borderRadius: 8,
+    },
+    historyDate: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 4,
+    },
+    historyType: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    historyValue: {
+      fontSize: 16,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    historyNotes: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+      fontStyle: 'italic',
+    },
+    emptyText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 20,
+    },
+    errorText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 100,
+    },
+    deleteButtonContainer: {
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    deleteButton: {
+      backgroundColor: colors.error,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 80,
+      height: '100%',
+      borderRadius: 8,
+    },
+  });
 
 export default ChildProfileScreen;
