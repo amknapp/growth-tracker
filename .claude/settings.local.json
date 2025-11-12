@@ -21,7 +21,8 @@
       "Bash(powershell -Command:*)",
       "Bash(wmic process where \"name like ''%qemu%'' or name like ''%emulator%''\" get ProcessId,Name,CommandLine)",
       "Bash(git log:*)",
-      "Bash(keytool -list -v -keystore /tmp/test-keystore.tmp -storepass '$h4il2m3*':*)"
+      "Bash(keytool -list -v -keystore /tmp/test-keystore.tmp -storepass '$h4il2m3*':*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
