@@ -6,6 +6,23 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import PrivacyPolicyScreen from '../PrivacyPolicyScreen';
 
+jest.mock('../../hooks/useTheme', () => ({
+  useTheme: () => ({
+    colors: {
+      primary: '#7E57C2',
+      background: '#f5f5f5',
+      card: '#fff',
+      text: '#333',
+      textSecondary: '#666',
+      textLight: '#999',
+      border: '#e0e0e0',
+      error: '#FF3B30',
+    },
+    isDark: false,
+    colorScheme: 'light',
+  }),
+}));
+
 describe('PrivacyPolicyScreen', () => {
   it('should render correctly', () => {
     const { getAllByText } = render(<PrivacyPolicyScreen />);
