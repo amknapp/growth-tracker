@@ -1,18 +1,11 @@
 /**
  * useTheme Hook
- * Detects system color scheme and returns appropriate theme colors
+ * Now uses ThemeContext to support user-selected color themes
+ * Maintains backward compatibility with existing code
  */
 
-import { useColorScheme } from 'react-native';
-import { DarkColors, LightColors } from '../constants/colors';
+import { useThemeContext } from '../contexts/ThemeContext';
 
 export const useTheme = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  return {
-    colors: isDark ? DarkColors : LightColors,
-    isDark,
-    colorScheme: colorScheme || 'light',
-  };
+  return useThemeContext();
 };

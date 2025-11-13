@@ -57,6 +57,10 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
     props.navigation.navigate('TermsOfService');
   };
 
+  const handleThemePress = () => {
+    props.navigation.navigate('ThemeSettings');
+  };
+
   const styles = getStyles(colors);
 
   return (
@@ -121,7 +125,24 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
         {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Settings/Legal Section */}
+        {/* Settings Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Settings</Text>
+          <TouchableOpacity style={styles.menuItem} onPress={handleThemePress}>
+            <Icon
+              name="palette"
+              size={24}
+              color={colors.text}
+              style={styles.menuIcon}
+            />
+            <Text style={styles.menuText}>Theme Settings</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Legal Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Legal</Text>
           <TouchableOpacity
