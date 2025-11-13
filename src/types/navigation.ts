@@ -8,6 +8,7 @@ import { RouteProp } from '@react-navigation/native';
 
 export type DrawerParamList = {
   HomeStack: undefined;
+  ThemeSettings: undefined;
   PrivacyPolicy: undefined;
   TermsOfService: undefined;
 };
@@ -32,14 +33,20 @@ export type ChildProfileNavigationProp = NativeStackNavigationProp<
   'ChildProfile'
 >;
 
-export type ChildProfileRouteProp = RouteProp<RootStackParamList, 'ChildProfile'>;
+export type ChildProfileRouteProp = RouteProp<
+  RootStackParamList,
+  'ChildProfile'
+>;
 
 export type AddMeasurementNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'AddMeasurement'
 >;
 
-export type AddMeasurementRouteProp = RouteProp<RootStackParamList, 'AddMeasurement'>;
+export type AddMeasurementRouteProp = RouteProp<
+  RootStackParamList,
+  'AddMeasurement'
+>;
 
 export type GrowthChartNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
