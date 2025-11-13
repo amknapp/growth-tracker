@@ -20,6 +20,7 @@ import {
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { Child } from '../types';
 import SecureStorage from '../services/SecureStorage';
@@ -35,6 +36,7 @@ interface Props {
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { children, loading, refreshChildren } = useChildren(); // Use the new hook
   const drawerNavigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
 
   useFocusEffect(
@@ -163,7 +165,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         ListEmptyComponent={!loading ? renderEmptyState : null}
       />
 
-      <TouchableOpacity style={styles.addButton} onPress={handleAddChild}>
+      <TouchableOpacity
+        style={[
+          styles.addButton,
+          { marginBottom: Math.max(insets.bottom, 16) },
+        ]}
+        onPress={handleAddChild}
+      >
         <Text style={styles.addButtonText}>+ Add Child</Text>
       </TouchableOpacity>
     </View>
@@ -257,25 +265,26 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       paddingVertical: 16,
       paddingHorizontal: 24,
       borderRadius: 12,
-      margin: 16,
-      alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 4,
-    },
-    addButtonText: {
-      color: '#fff',
-      fontSize: 18,
-      fontWeight: '600',
-    },
-    deleteButtonContainer: {
-      justifyContent: 'center',
-      marginBottom: 12,
-    },
-    deleteButton: {
-      backgroundColor: colors.error,
+      marginHorizontal: 16,
+    marginTop: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  deleteButtonContainer: {
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  deleteButton: {
+    backgroundColor: colors.error,
       justifyContent: 'center',
       alignItems: 'center',
       width: 80,
