@@ -20,7 +20,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
 import { RootStackParamList } from '../types/navigation';
 import { Child, Sex } from '../types';
-import SecureStorage from '../services/SecureStorage';
+import { useAppDataStore } from '../store/appDataStore';
 import { useTheme } from '../hooks/useTheme';
 import {
   getValidationErrorMessage,
@@ -35,6 +35,7 @@ interface Props {
 }
 
 const AddChildScreen: React.FC<Props> = ({ navigation }) => {
+  const addChild = useAppDataStore(state => state.addChild);
   const [name, setName] = useState('');
   const [sex, setSex] = useState<Sex>('male');
   const [birthDate, setBirthDate] = useState<Date | null>(null);
@@ -106,7 +107,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
         updatedAt: new Date().toISOString(),
       };
 
-      await SecureStorage.addChild(newChild);
+      await addChild(newChild);
       Alert.alert('Success', 'Child profile added successfully', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);

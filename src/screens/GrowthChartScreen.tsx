@@ -29,7 +29,7 @@ import {
   GrowthChartDataPoint,
   Measurement,
 } from '../types';
-import SecureStorage from '../services/SecureStorage';
+import { useAppDataStore } from '../store/appDataStore';
 import CDCDataService from '../services/CDCDataService';
 import { calculateAgeInMonths } from '../utils/ageCalculator';
 import {
@@ -50,6 +50,11 @@ const GrowthChartScreen: React.FC<Props> = ({
   route,
 }) => {
   const { childId, measurementType } = route.params;
+  const getChild = useAppDataStore(state => state.getChild);
+  const getMeasurementsByType = useAppDataStore(
+    state => state.getMeasurementsByType,
+  );
+  const deleteMeasurement = useAppDataStore(state => state.deleteMeasurement);
 
   const [child, setChild] = useState<Child | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -76,13 +81,10 @@ const GrowthChartScreen: React.FC<Props> = ({
     return () => subscription?.remove();
   }, []);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(() => {
     try {
-      const childData = await SecureStorage.getChild(childId);
-      const measurementsData = await SecureStorage.getMeasurementsByType(
-        childId,
-        measurementType,
-      );
+      const childData = getChild(childId);
+      const measurementsData = getMeasurementsByType(childId, measurementType);
 
       setChild(childData);
       setMeasurements(measurementsData);
@@ -93,7 +95,7 @@ const GrowthChartScreen: React.FC<Props> = ({
     } finally {
       setLoading(false);
     }
-  }, [childId, measurementType]);
+  }, [childId, measurementType, getChild, getMeasurementsByType]);
 
   const loadChartData = useCallback(async () => {
     if (!child) {
@@ -308,8 +310,8 @@ const GrowthChartScreen: React.FC<Props> = ({
           style: 'destructive',
           onPress: async () => {
             try {
-              await SecureStorage.deleteMeasurement(measurementId);
-              await loadData();
+              await deleteMeasurement(measurementId);
+              loadData();
             } catch (err) {
               logger.error('Error deleting measurement:', err);
               Alert.alert('Error', 'Failed to delete measurement');

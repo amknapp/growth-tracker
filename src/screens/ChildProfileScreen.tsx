@@ -25,7 +25,7 @@ import {
   ChildProfileRouteProp,
 } from '../types/navigation';
 import { Child, Measurement } from '../types';
-import SecureStorage from '../services/SecureStorage';
+import { useAppDataStore } from '../store/appDataStore';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { useTheme } from '../hooks/useTheme';
 import { logger } from '../utils/logger';
@@ -37,18 +37,21 @@ interface Props {
 
 const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const { childId } = route.params;
+  const getChild = useAppDataStore(state => state.getChild);
+  const getMeasurementsForChild = useAppDataStore(
+    state => state.getMeasurementsForChild,
+  );
+  const deleteMeasurement = useAppDataStore(state => state.deleteMeasurement);
   const [child, setChild] = useState<Child | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [_loading, setLoading] = useState(true);
   const drawerNavigation = useNavigation();
   const { colors } = useTheme();
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(() => {
     try {
-      const childData = await SecureStorage.getChild(childId);
-      const measurementsData = await SecureStorage.getMeasurementsForChild(
-        childId,
-      );
+      const childData = getChild(childId);
+      const measurementsData = getMeasurementsForChild(childId);
 
       setChild(childData);
       setMeasurements(measurementsData);
@@ -58,7 +61,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
     } finally {
       setLoading(false);
     }
-  }, [childId]);
+  }, [childId, getChild, getMeasurementsForChild]);
 
   useFocusEffect(
     useCallback(() => {
@@ -116,8 +119,8 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await SecureStorage.deleteMeasurement(measurementId);
-              await loadData();
+              await deleteMeasurement(measurementId);
+              loadData();
             } catch (error) {
               logger.error('Error deleting measurement:', error);
               Alert.alert('Error', 'Failed to delete measurement');

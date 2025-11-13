@@ -3,7 +3,7 @@
  * Shows children list for quick switching and app navigation
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   DrawerContentComponentProps,
@@ -13,28 +13,15 @@ import { CommonActions, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { useTheme } from '../hooks/useTheme';
-import { useChildren } from '../hooks/useChildren'; // Import the new hook
+import { useChildren } from '../hooks/useChildren';
+import { Child } from '../types';
 
 const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
-  const { children, loading, refreshChildren } = useChildren(); // Use the new hook
+  const { children, loading } = useChildren();
   const navigation = useNavigation();
   const { colors } = useTheme();
 
-  // Reload children when drawer opens
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      refreshChildren(); // Refresh children when drawer is focused
-    });
-    return unsubscribe;
-  }, [navigation, refreshChildren]);
-
-  // Also reload children when navigation state changes (e.g., after adding a child)
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('state', () => {
-      refreshChildren(); // Refresh children when navigation state changes
-    });
-    return unsubscribe;
-  }, [navigation, refreshChildren]);
+  // No need to reload on navigation changes - Zustand store updates automatically
 
   const handleChildPress = (childId: string) => {
     // Navigate to the child's profile within the HomeStack
@@ -103,7 +90,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = props => {
           {loading ? (
             <Text style={styles.loadingText}>Loading...</Text>
           ) : children.length > 0 ? (
-            children.map(child => {
+            children.map((child: Child) => {
               const age = getCurrentAge(child.birthDate);
               const ageText = formatAge(age);
               return (
