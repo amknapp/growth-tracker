@@ -6,10 +6,10 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import AddMeasurementScreen from '../AddMeasurementScreen';
-import SecureStorage from '../../services/SecureStorage';
+import { useAppDataStore } from '../../store/appDataStore';
 
 // Mock dependencies
-jest.mock('../../services/SecureStorage');
+jest.mock('../../store/appDataStore');
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     goBack: jest.fn(),
@@ -49,8 +49,15 @@ describe('AddMeasurementScreen', () => {
     params: { childId: 'test-child-123' },
   } as any;
 
+  const mockAddMeasurement = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
+    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
+      selector({
+        addMeasurement: mockAddMeasurement,
+      }),
+    );
   });
 
   it('should render correctly', () => {
@@ -171,7 +178,7 @@ describe('AddMeasurementScreen', () => {
   });
 
   it('should save single measurement successfully', async () => {
-    (SecureStorage.addMeasurement as jest.Mock).mockResolvedValue(undefined);
+    (mockAddMeasurement as jest.Mock).mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText } = render(
       <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
@@ -184,7 +191,7 @@ describe('AddMeasurementScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(SecureStorage.addMeasurement).toHaveBeenCalledWith(
+      expect(mockAddMeasurement).toHaveBeenCalledWith(
         expect.objectContaining({
           childId: 'test-child-123',
           type: 'weight',
@@ -196,7 +203,7 @@ describe('AddMeasurementScreen', () => {
   });
 
   it('should save multiple measurements successfully', async () => {
-    (SecureStorage.addMeasurement as jest.Mock).mockResolvedValue(undefined);
+    (mockAddMeasurement as jest.Mock).mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText } = render(
       <AddMeasurementScreen navigation={mockNavigation} route={mockRoute} />,
@@ -215,21 +222,21 @@ describe('AddMeasurementScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(SecureStorage.addMeasurement).toHaveBeenCalledTimes(3);
-      expect(SecureStorage.addMeasurement).toHaveBeenCalledWith(
+      expect(mockAddMeasurement).toHaveBeenCalledTimes(3);
+      expect(mockAddMeasurement).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'weight', value: 10.5 }),
       );
-      expect(SecureStorage.addMeasurement).toHaveBeenCalledWith(
+      expect(mockAddMeasurement).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'height', value: 75.2 }),
       );
-      expect(SecureStorage.addMeasurement).toHaveBeenCalledWith(
+      expect(mockAddMeasurement).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'headCircumference', value: 42.5 }),
       );
     });
   });
 
   it('should handle save error', async () => {
-    (SecureStorage.addMeasurement as jest.Mock).mockRejectedValue(
+    (mockAddMeasurement as jest.Mock).mockRejectedValue(
       new Error('Storage error'),
     );
 
@@ -263,7 +270,7 @@ describe('AddMeasurementScreen', () => {
   });
 
   it('should show saving state', async () => {
-    (SecureStorage.addMeasurement as jest.Mock).mockImplementation(
+    (mockAddMeasurement as jest.Mock).mockImplementation(
       () => new Promise(resolve => setTimeout(resolve, 100)),
     );
 

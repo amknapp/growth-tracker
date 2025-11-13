@@ -5,11 +5,11 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CustomDrawerContent from '../CustomDrawerContent';
-import SecureStorage from '../../services/SecureStorage';
+import { useAppDataStore } from '../../store/appDataStore';
 import { Child } from '../../types';
 
 // Mock dependencies
-jest.mock('../../services/SecureStorage');
+jest.mock('../../store/appDataStore');
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     dispatch: jest.fn(),
@@ -39,6 +39,9 @@ jest.mock('../../hooks/useTheme', () => ({
     colorScheme: 'light',
   }),
 }));
+jest.mock('../../hooks/useChildren');
+
+import { useChildren } from '../../hooks/useChildren';
 
 describe('CustomDrawerContent', () => {
   const mockProps = {
@@ -79,11 +82,15 @@ describe('CustomDrawerContent', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useChildren as jest.Mock).mockReturnValue({
+      children: [],
+      loading: false,
+      error: null,
+      refreshChildren: jest.fn(),
+    });
   });
 
   it('should render correctly', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue([]);
-
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
     expect(getByText('Growth Tracker')).toBeTruthy();
@@ -93,7 +100,12 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should display children list', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue(mockChildren);
+    (useChildren as jest.Mock).mockReturnValue({
+      children: mockChildren,
+      loading: false,
+      error: null,
+      refreshChildren: jest.fn(),
+    });
 
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
@@ -104,8 +116,6 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should display empty state when no children', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue([]);
-
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
     await waitFor(() => {
@@ -114,9 +124,12 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should display loading state', () => {
-    (SecureStorage.getChildren as jest.Mock).mockImplementation(
-      () => new Promise(() => {}), // Never resolves
-    );
+    (useChildren as jest.Mock).mockReturnValue({
+      children: [],
+      loading: true,
+      error: null,
+      refreshChildren: jest.fn(),
+    });
 
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
@@ -124,8 +137,6 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should navigate to Home when Home is pressed', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue([]);
-
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
     const homeButton = getByText('Home');
@@ -137,7 +148,12 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should navigate to child profile when child is pressed', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue(mockChildren);
+    (useChildren as jest.Mock).mockReturnValue({
+      children: mockChildren,
+      loading: false,
+      error: null,
+      refreshChildren: jest.fn(),
+    });
 
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
@@ -154,8 +170,6 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should navigate to Privacy Policy when pressed', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue([]);
-
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
     const privacyButton = getByText('Privacy Policy');
@@ -165,8 +179,6 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should navigate to Terms of Service when pressed', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue([]);
-
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
     const termsButton = getByText('Terms of Service');
@@ -178,8 +190,6 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should display footer with version and data storage info', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue([]);
-
     const { getByText } = render(<CustomDrawerContent {...mockProps} />);
 
     expect(getByText(/Growth Tracker v1.0/i)).toBeTruthy();
@@ -187,7 +197,12 @@ describe('CustomDrawerContent', () => {
   });
 
   it('should display age for each child', async () => {
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue(mockChildren);
+    (useChildren as jest.Mock).mockReturnValue({
+      children: mockChildren,
+      loading: false,
+      error: null,
+      refreshChildren: jest.fn(),
+    });
 
     const { getAllByText } = render(<CustomDrawerContent {...mockProps} />);
 

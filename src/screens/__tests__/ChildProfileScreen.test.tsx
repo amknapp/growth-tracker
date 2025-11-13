@@ -6,11 +6,11 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import ChildProfileScreen from '../ChildProfileScreen';
-import SecureStorage from '../../services/SecureStorage';
+import { useAppDataStore } from '../../store/appDataStore';
 import { Child, Measurement } from '../../types';
 
 // Mock dependencies
-jest.mock('../../services/SecureStorage');
+jest.mock('../../store/appDataStore');
 
 jest.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({
@@ -108,13 +108,28 @@ describe('ChildProfileScreen', () => {
     },
   ];
 
+  const mockGetChild = jest.fn().mockReturnValue(mockChild);
+  const mockGetMeasurementsForChild = jest
+    .fn()
+    .mockReturnValue(mockMeasurements);
+  const mockDeleteMeasurement = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetChild.mockReturnValue(mockChild);
+    mockGetMeasurementsForChild.mockReturnValue(mockMeasurements);
+    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
+      selector({
+        getChild: mockGetChild,
+        getMeasurementsForChild: mockGetMeasurementsForChild,
+        deleteMeasurement: mockDeleteMeasurement,
+      }),
+    );
   });
 
   it('should render child profile correctly', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue(
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
       mockMeasurements,
     );
 
@@ -130,8 +145,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display latest measurements', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue(
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
       mockMeasurements,
     );
 
@@ -147,8 +162,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display "No data" for measurement types with no data', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue([]);
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
 
     const { getAllByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -161,8 +176,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should navigate to AddMeasurement when button is pressed', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue(
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
       mockMeasurements,
     );
 
@@ -183,8 +198,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should navigate to GrowthChart when measurement card is pressed', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue(
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
       mockMeasurements,
     );
 
@@ -207,8 +222,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display all measurements in history', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue(
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
       mockMeasurements,
     );
 
@@ -224,8 +239,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display empty state when no measurements', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue([]);
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
 
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -238,8 +253,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should show error when child is not found', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(null);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue([]);
+    (mockGetChild as jest.Mock).mockReturnValue(null);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
 
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -251,10 +266,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should handle load data error', async () => {
-    (SecureStorage.getChild as jest.Mock).mockRejectedValue(
-      new Error('Storage error'),
-    );
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue([]);
+    (mockGetChild as jest.Mock).mockRejectedValue(new Error('Storage error'));
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
 
     render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -274,8 +287,8 @@ describe('ChildProfileScreen', () => {
       sex: 'female',
     };
 
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(femaleChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue([]);
+    (mockGetChild as jest.Mock).mockReturnValue(femaleChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
 
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -287,8 +300,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should format measurement types correctly in history', async () => {
-    (SecureStorage.getChild as jest.Mock).mockResolvedValue(mockChild);
-    (SecureStorage.getMeasurementsForChild as jest.Mock).mockResolvedValue(
+    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
+    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
       mockMeasurements,
     );
 
