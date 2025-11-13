@@ -3,7 +3,7 @@
  * Displays list of children profiles
  */
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   Alert,
   Animated,
@@ -15,15 +15,11 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {
-  DrawerActions,
-  useFocusEffect,
-  useNavigation,
-} from '@react-navigation/native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { Child } from '../types';
-import SecureStorage from '../services/SecureStorage';
+import { useAppDataStore } from '../store/appDataStore';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { useChildren } from '../hooks/useChildren'; // Import the new hook
 import { useTheme } from '../hooks/useTheme';
@@ -34,16 +30,13 @@ interface Props {
 }
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
-  const { children, loading, refreshChildren } = useChildren(); // Use the new hook
+  const { children, loading } = useChildren();
+  const deleteChild = useAppDataStore(state => state.deleteChild);
   const drawerNavigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
 
-  useFocusEffect(
-    useCallback(() => {
-      refreshChildren(); // Refresh children when screen is focused
-    }, [refreshChildren]),
-  );
+  // No need to refresh on focus - Zustand store updates automatically
 
   const handleAddChild = () => {
     navigation.navigate('AddChild');
@@ -67,8 +60,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await SecureStorage.deleteChild(childId);
-              await refreshChildren(); // Refresh children after deletion
+              await deleteChild(childId);
             } catch (error) {
               logger.error('Error deleting child:', error);
               Alert.alert('Error', 'Failed to delete child profile');
@@ -266,25 +258,25 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       paddingHorizontal: 24,
       borderRadius: 12,
       marginHorizontal: 16,
-    marginTop: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  deleteButtonContainer: {
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  deleteButton: {
-    backgroundColor: colors.error,
+      marginTop: 16,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    addButtonText: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    deleteButtonContainer: {
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    deleteButton: {
+      backgroundColor: colors.error,
       justifyContent: 'center',
       alignItems: 'center',
       width: 80,
