@@ -6,10 +6,10 @@ import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import AddChildScreen from '../AddChildScreen';
-import SecureStorage from '../../services/SecureStorage';
+import { useAppDataStore } from '../../store/appDataStore';
 
 // Mock dependencies
-jest.mock('../../services/SecureStorage');
+jest.mock('../../store/appDataStore');
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     goBack: jest.fn(),
@@ -46,10 +46,17 @@ describe('AddChildScreen', () => {
     navigate: jest.fn(),
   } as any;
 
+  const mockAddChild = jest.fn();
+
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
-    (SecureStorage.addChild as jest.Mock).mockReset();
+    mockAddChild.mockReset();
+    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
+      selector({
+        addChild: mockAddChild,
+      }),
+    );
   });
 
   afterEach(() => {
@@ -157,7 +164,7 @@ describe('AddChildScreen', () => {
   // Invalid date format tests removed since picker only provides valid dates
 
   it('should save child successfully', async () => {
-    (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
+    (mockAddChild as jest.Mock).mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText, getByTestId, queryByText } =
       render(<AddChildScreen navigation={mockNavigation} />);
@@ -181,7 +188,7 @@ describe('AddChildScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(SecureStorage.addChild).toHaveBeenCalledWith(
+      expect(mockAddChild).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'John Doe',
           sex: 'male', // Default
@@ -201,7 +208,7 @@ describe('AddChildScreen', () => {
   });
 
   it('should save child with female sex', async () => {
-    (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
+    (mockAddChild as jest.Mock).mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText, getByTestId, queryByText } =
       render(<AddChildScreen navigation={mockNavigation} />);
@@ -225,7 +232,7 @@ describe('AddChildScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(SecureStorage.addChild).toHaveBeenCalledWith(
+      expect(mockAddChild).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Jane Doe',
           sex: 'female',
@@ -240,9 +247,7 @@ describe('AddChildScreen', () => {
   });
 
   it('should handle save error', async () => {
-    (SecureStorage.addChild as jest.Mock).mockRejectedValue(
-      new Error('Storage error'),
-    );
+    (mockAddChild as jest.Mock).mockRejectedValue(new Error('Storage error'));
 
     const { getByText, getByPlaceholderText, getByTestId, queryByText } =
       render(<AddChildScreen navigation={mockNavigation} />);
@@ -287,7 +292,7 @@ describe('AddChildScreen', () => {
   });
 
   it('should trim whitespace from name', async () => {
-    (SecureStorage.addChild as jest.Mock).mockResolvedValue(undefined);
+    (mockAddChild as jest.Mock).mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText, getByTestId, queryByText } =
       render(<AddChildScreen navigation={mockNavigation} />);
@@ -308,7 +313,7 @@ describe('AddChildScreen', () => {
     fireEvent.press(saveButton);
 
     await waitFor(() => {
-      expect(SecureStorage.addChild).toHaveBeenCalledWith(
+      expect(mockAddChild).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'John Doe', // Trimmed
         }),
@@ -322,7 +327,7 @@ describe('AddChildScreen', () => {
   });
 
   it('should disable save button while saving', async () => {
-    (SecureStorage.addChild as jest.Mock).mockImplementation(
+    (mockAddChild as jest.Mock).mockImplementation(
       () => new Promise(resolve => setTimeout(resolve, 100)),
     );
 

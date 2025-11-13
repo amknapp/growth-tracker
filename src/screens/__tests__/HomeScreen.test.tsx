@@ -13,12 +13,12 @@ import {
 } from '@testing-library/react-native';
 import { Alert } from 'react-native'; // Add this import
 import HomeScreen from '../HomeScreen';
-import SecureStorage from '../../services/SecureStorage';
 import { Child } from '../../types';
-import { useFocusEffect } from '@react-navigation/native'; // Add this import
 
 // Mock dependencies
-jest.mock('../../services/SecureStorage');
+jest.mock('../../store/appDataStore');
+jest.mock('../../hooks/useChildren');
+
 jest.mock('@react-navigation/native', () => {
   const actualNav = jest.requireActual('@react-navigation/native');
   return {
@@ -28,7 +28,6 @@ jest.mock('@react-navigation/native', () => {
       dispatch: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
     }),
-    useFocusEffect: jest.fn(), // Mock useFocusEffect here
     DrawerActions: {
       openDrawer: jest.fn(),
     },
@@ -101,6 +100,9 @@ jest.mock('react-native-gesture-handler', () => {
   };
 });
 
+import { useChildren } from '../../hooks/useChildren';
+import { useAppDataStore } from '../../store/appDataStore';
+
 describe('HomeScreen', () => {
   const mockChildren: Child[] = [
     {
@@ -121,28 +123,25 @@ describe('HomeScreen', () => {
     },
   ];
 
-  let resolveGetChildren: (value: Child[]) => void;
-  let rejectGetChildren: (reason?: any) => void;
+  const mockDeleteChild = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock getChildren to return a pending promise by default
-    (SecureStorage.getChildren as jest.Mock).mockImplementation(
-      () =>
-        new Promise((resolve, reject) => {
-          resolveGetChildren = resolve;
-          rejectGetChildren = reject;
-        }),
+    (useChildren as jest.Mock).mockReturnValue({
+      children: mockChildren,
+      loading: false,
+      error: null,
+      refreshChildren: jest.fn(),
+    });
+    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
+      selector({
+        deleteChild: mockDeleteChild,
+      }),
     );
   });
 
   it('should render children list when loaded', async () => {
     const { getByText } = render(<HomeScreen navigation={null as any} />);
-
-    await act(async () => {
-      (useFocusEffect as jest.Mock).mock.calls[0][0](); // Trigger useFocusEffect
-      resolveGetChildren(mockChildren);
-    });
 
     await waitFor(() => {
       expect(getByText('Test Child 1')).toBeTruthy();
@@ -151,12 +150,14 @@ describe('HomeScreen', () => {
   });
 
   it('should display empty state when no children', async () => {
-    const { getByText } = render(<HomeScreen navigation={null as any} />);
-
-    await act(async () => {
-      (useFocusEffect as jest.Mock).mock.calls[0][0](); // Trigger useFocusEffect
-      resolveGetChildren([]);
+    (useChildren as jest.Mock).mockReturnValue({
+      children: [],
+      loading: false,
+      error: null,
+      refreshChildren: jest.fn(),
     });
+
+    const { getByText } = render(<HomeScreen navigation={null as any} />);
 
     await waitFor(() => {
       expect(getByText(/No Children Added/i)).toBeTruthy();
@@ -166,11 +167,6 @@ describe('HomeScreen', () => {
   it('should display child age information', async () => {
     const { getAllByText } = render(<HomeScreen navigation={null as any} />);
 
-    await act(async () => {
-      (useFocusEffect as jest.Mock).mock.calls[0][0](); // Trigger useFocusEffect
-      resolveGetChildren(mockChildren);
-    });
-
     await waitFor(() => {
       // Should display age for each child (format may vary)
       const allText = getAllByText(/year|month/i);
@@ -179,16 +175,9 @@ describe('HomeScreen', () => {
   });
 
   it('should handle delete child', async () => {
-    (SecureStorage.deleteChild as jest.Mock).mockResolvedValue(undefined);
+    mockDeleteChild.mockResolvedValue(undefined);
 
-    const { getByText, queryByText } = render(
-      <HomeScreen navigation={null as any} />,
-    );
-
-    await act(async () => {
-      (useFocusEffect as jest.Mock).mock.calls[0][0](); // Trigger useFocusEffect
-      resolveGetChildren(mockChildren); // Resolve initial load
-    });
+    const { getByText } = render(<HomeScreen navigation={null as any} />);
 
     await waitFor(() => {
       expect(getByText('Test Child 1')).toBeTruthy();
@@ -211,17 +200,11 @@ describe('HomeScreen', () => {
     // Simulate pressing the 'Delete' button in the Alert
     const deleteButton = (Alert.alert as jest.Mock).mock.calls[0][2][1];
     await act(async () => {
-      // Re-mock getChildren to return the list without the deleted child
-      (SecureStorage.getChildren as jest.Mock).mockResolvedValue([
-        mockChildren[1],
-      ]);
-      deleteButton.onPress();
+      await deleteButton.onPress();
     });
 
     await waitFor(() => {
-      expect(SecureStorage.deleteChild).toHaveBeenCalledWith('1');
-      expect(queryByText('Test Child 1')).toBeNull(); // Child 1 should be gone
-      expect(getByText('Test Child 2')).toBeTruthy(); // Child 2 should still be there
+      expect(mockDeleteChild).toHaveBeenCalledWith('1');
     });
   });
 });

@@ -1,10 +1,12 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { useChildren } from '../useChildren';
+import { useAppDataStore } from '../../store/appDataStore';
 import SecureStorage from '../../services/SecureStorage';
 import { Child } from '../../types';
 
-// Mock SecureStorage
+// Mock SecureStorage and appDataStore
 jest.mock('../../services/SecureStorage');
+jest.mock('../../store/appDataStore');
 
 const mockChildren: Child[] = [
   {
@@ -26,65 +28,72 @@ const mockChildren: Child[] = [
 ];
 
 describe('useChildren', () => {
+  const mockInitialize = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue(mockChildren);
+    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
+      selector({
+        children: mockChildren,
+        loading: false,
+        error: null,
+        initialize: mockInitialize,
+      }),
+    );
   });
 
-  it('should return initial loading state and then children data', async () => {
+  it('should return children from store', () => {
     const { result } = renderHook(() => useChildren());
 
+    expect(result.current.children).toEqual(mockChildren);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('should return loading state from store', () => {
+    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
+      selector({
+        children: [],
+        loading: true,
+        error: null,
+        initialize: mockInitialize,
+      }),
+    );
+
+    const { result } = renderHook(() => useChildren());
+
+    expect(result.current.children).toEqual([]);
     expect(result.current.loading).toBe(true);
-    expect(result.current.children).toEqual([]);
     expect(result.current.error).toBeNull();
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.children).toEqual(mockChildren);
-    expect(result.current.error).toBeNull();
-    expect(SecureStorage.getChildren).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle error when fetching children', async () => {
-    const mockError = new Error('Failed to fetch children');
-    (SecureStorage.getChildren as jest.Mock).mockRejectedValue(mockError);
+  it('should return error state from store', () => {
+    const mockError = new Error('Failed to load');
+    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
+      selector({
+        children: [],
+        loading: false,
+        error: mockError,
+        initialize: mockInitialize,
+      }),
+    );
 
     const { result } = renderHook(() => useChildren());
 
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
     expect(result.current.children).toEqual([]);
+    expect(result.current.loading).toBe(false);
     expect(result.current.error).toEqual(mockError);
-    expect(SecureStorage.getChildren).toHaveBeenCalledTimes(1);
   });
 
-  it('should refresh children when refreshChildren is called', async () => {
+  it('should provide refreshChildren function that calls initialize', async () => {
+    mockInitialize.mockResolvedValue(undefined);
+
     const { result } = renderHook(() => useChildren());
 
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.children).toEqual(mockChildren);
-    expect(SecureStorage.getChildren).toHaveBeenCalledTimes(1);
-
-    // Simulate a change in data for the refresh
-    const updatedChildren = [
-      ...mockChildren,
-      {
-        id: '3',
-        name: 'Child Three',
-        birthDate: '2024-03-20',
-        sex: 'male',
-        createdAt: '2024-03-20T12:00:00Z',
-        updatedAt: '2024-03-20T12:00:00Z',
-      },
-    ];
-    (SecureStorage.getChildren as jest.Mock).mockResolvedValue(updatedChildren);
-
-    await result.current.refreshChildren();
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.children).toEqual(updatedChildren);
+    await act(async () => {
+      await result.current.refreshChildren();
     });
-    expect(SecureStorage.getChildren).toHaveBeenCalledTimes(2);
+
+    expect(mockInitialize).toHaveBeenCalledTimes(1);
   });
 });
