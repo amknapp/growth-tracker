@@ -3,7 +3,7 @@
  * Tracks children's growth using CDC and WHO growth charts
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import {
 } from '@react-navigation/drawer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DrawerParamList, RootStackParamList } from './src/types/navigation';
+import { useAppDataStore } from './src/store/appDataStore';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -81,6 +82,13 @@ const DrawerContent = (props: DrawerContentComponentProps) => (
 );
 
 function App() {
+  const initialize = useAppDataStore(state => state.initialize);
+
+  // Initialize the store once on app startup (triggers Face ID once)
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={styles.container}>

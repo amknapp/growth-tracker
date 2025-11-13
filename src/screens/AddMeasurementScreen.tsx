@@ -22,7 +22,7 @@ import {
   AddMeasurementRouteProp,
 } from '../types/navigation';
 import { Measurement, MeasurementType } from '../types';
-import SecureStorage from '../services/SecureStorage';
+import { useAppDataStore } from '../store/appDataStore';
 import { useTheme } from '../hooks/useTheme';
 import {
   getValidationErrorMessage,
@@ -39,6 +39,7 @@ interface Props {
 
 const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const { childId } = route.params;
+  const addMeasurement = useAppDataStore(state => state.addMeasurement);
 
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
@@ -152,7 +153,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           notes: sanitizedNotes || undefined,
           createdAt: new Date().toISOString(),
         };
-        await SecureStorage.addMeasurement(newMeasurement);
+        await addMeasurement(newMeasurement);
       }
 
       // Navigate back immediately - no need for success alert
