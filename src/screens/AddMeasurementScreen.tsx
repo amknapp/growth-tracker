@@ -269,7 +269,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-      </View>
+        </View>
       </ScrollView>
     </View>
   );

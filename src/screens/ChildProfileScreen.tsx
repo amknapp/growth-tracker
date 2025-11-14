@@ -199,7 +199,10 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAddMeasurement}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddMeasurement}
+        >
           <Text style={styles.addButtonText}>+ Add Measurement</Text>
         </TouchableOpacity>
 
@@ -225,8 +228,8 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
                     {measurement.type === 'weight'
                       ? 'Weight'
                       : measurement.type === 'height'
-                      ? 'Height'
-                      : 'Head Circumference'}
+                        ? 'Height'
+                        : 'Head Circumference'}
                   </Text>
                   <Text style={styles.historyValue}>
                     {measurement.value.toFixed(1)}{' '}
