@@ -15,7 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AreaRange, CartesianChart, Line, Scatter } from 'victory-native';
@@ -38,6 +37,7 @@ import {
   interpretPercentile,
 } from '../utils/percentileCalculator';
 import { useTheme } from '../hooks/useTheme';
+import AppHeader from '../components/AppHeader';
 import { logger } from '../utils/logger';
 
 interface Props {
@@ -66,12 +66,7 @@ const GrowthChartScreen: React.FC<Props> = ({
   const [_chartWidth, setChartWidth] = useState(
     Dimensions.get('window').width - 16,
   );
-  const drawerNavigation = useNavigation();
   const { colors } = useTheme();
-
-  const openDrawer = () => {
-    drawerNavigation.dispatch(DrawerActions.openDrawer());
-  };
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -349,229 +344,221 @@ const GrowthChartScreen: React.FC<Props> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
-            <Text style={styles.menuIcon}>☰</Text>
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.title}>
-              {child.name} - {getMeasurementLabel()}
-            </Text>
-          </View>
-        </View>
+      <AppHeader
+        title={child.name}
+        subtitle={getMeasurementLabel()}
+      />
 
-        <View style={styles.standardToggle}>
-          <TouchableOpacity
+      <View style={styles.standardToggleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.standardButton,
+            chartStandard === 'CDC' && styles.standardButtonSelected,
+          ]}
+          onPress={() => setChartStandard('CDC')}
+        >
+          <Text
             style={[
-              styles.standardButton,
-              chartStandard === 'CDC' && styles.standardButtonSelected,
+              styles.standardButtonText,
+              chartStandard === 'CDC' && styles.standardButtonTextSelected,
             ]}
-            onPress={() => setChartStandard('CDC')}
           >
-            <Text
-              style={[
-                styles.standardButtonText,
-                chartStandard === 'CDC' && styles.standardButtonTextSelected,
-              ]}
-            >
-              CDC
-            </Text>
-          </TouchableOpacity>
+            CDC
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
+        <TouchableOpacity
+          style={[
+            styles.standardButton,
+            chartStandard === 'WHO' && styles.standardButtonSelected,
+          ]}
+          onPress={() => setChartStandard('WHO')}
+        >
+          <Text
             style={[
-              styles.standardButton,
-              chartStandard === 'WHO' && styles.standardButtonSelected,
+              styles.standardButtonText,
+              chartStandard === 'WHO' && styles.standardButtonTextSelected,
             ]}
-            onPress={() => setChartStandard('WHO')}
           >
-            <Text
-              style={[
-                styles.standardButtonText,
-                chartStandard === 'WHO' && styles.standardButtonTextSelected,
-              ]}
-            >
-              WHO
-            </Text>
-          </TouchableOpacity>
-        </View>
+            WHO
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView}>
         {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerText}>{error}</Text>
-        </View>
-      )}
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>{error}</Text>
+          </View>
+        )}
 
-      {loadingChart && (
-        <View style={styles.chartLoadingContainer}>
-          <ActivityIndicator size="large" color="#4A90E2" />
-          <Text style={styles.chartLoadingText}>
-            Loading growth chart data...
-          </Text>
-        </View>
-      )}
+        {loadingChart && (
+          <View style={styles.chartLoadingContainer}>
+            <ActivityIndicator size="large" color="#4A90E2" />
+            <Text style={styles.chartLoadingText}>
+              Loading growth chart data...
+            </Text>
+          </View>
+        )}
 
-      {latestPercentileData && !loadingChart && (
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Latest Measurement</Text>
-          <Text style={styles.statsValue}>
-            {latestPercentileData.value.toFixed(1)} {getYAxisLabel()}
-          </Text>
-          <Text style={styles.statsPercentile}>
-            {latestPercentileData.percentile.toFixed(1)}th percentile
-          </Text>
-          <Text style={styles.statsInterpretation}>
-            {interpretPercentile(latestPercentileData.percentile)}
-          </Text>
-        </View>
-      )}
+        {latestPercentileData && !loadingChart && (
+          <View style={styles.statsCard}>
+            <Text style={styles.statsTitle}>Latest Measurement</Text>
+            <Text style={styles.statsValue}>
+              {latestPercentileData.value.toFixed(1)} {getYAxisLabel()}
+            </Text>
+            <Text style={styles.statsPercentile}>
+              {latestPercentileData.percentile.toFixed(1)}th percentile
+            </Text>
+            <Text style={styles.statsInterpretation}>
+              {interpretPercentile(latestPercentileData.percentile)}
+            </Text>
+          </View>
+        )}
 
-      {!loadingChart && (
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Growth Chart</Text>
+        {!loadingChart && (
+          <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Growth Chart</Text>
 
-          {victoryData ? (
-            <>
-              <View style={styles.chartCanvasContainer}>
-                <CartesianChart
-                  data={victoryData.data}
-                  xKey="x"
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  yKeys={victoryData.yKeys as any}
-                  axisOptions={{
-                    tickCount: 5,
-                    labelColor: colors.primary,
-                    labelPosition: { x: 'inset', y: 'inset' },
-                    formatYLabel: value => `${value}`,
-                    formatXLabel: value => `${value}`,
-                  }}
-                  domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
-                >
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {({ points }: any) => (
-                    <>
-                      {/* Percentile curves */}
-                      <Line
-                        points={points.p5}
-                        color="#ccc"
-                        strokeWidth={1}
-                        curveType="natural"
-                        connectMissingData={true}
-                      />
-                      <AreaRange
-                        lowerPoints={points.p5}
-                        upperPoints={points.p25}
-                        connectMissingData={true}
-                        opacity={0.1}
-                      />
-                      <Line
-                        points={points.p25}
-                        color="#ccc"
-                        strokeWidth={1}
-                        curveType="natural"
-                        connectMissingData={true}
-                      />
-                      <AreaRange
-                        lowerPoints={points.p25}
-                        upperPoints={points.p75}
-                        connectMissingData={true}
-                        opacity={0.2}
-                      />
-                      <AreaRange
-                        lowerPoints={points.p75}
-                        upperPoints={points.p95}
-                        connectMissingData={true}
-                        opacity={0.1}
-                      />
-                      <Line
-                        points={points.p50}
-                        color="#999"
-                        strokeWidth={2}
-                        curveType="natural"
-                        connectMissingData={true}
-                      />
-                      <Line
-                        points={points.p75}
-                        color="#ccc"
-                        strokeWidth={1}
-                        curveType="natural"
-                        connectMissingData={true}
-                      />
-                      <Line
-                        points={points.p95}
-                        color="#ccc"
-                        strokeWidth={1}
-                        curveType="natural"
-                        connectMissingData={true}
-                      />
+            {victoryData ? (
+              <>
+                <View style={styles.chartCanvasContainer}>
+                  <CartesianChart
+                    data={victoryData.data}
+                    xKey="x"
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    yKeys={victoryData.yKeys as any}
+                    axisOptions={{
+                      tickCount: 5,
+                      labelColor: colors.primary,
+                      labelPosition: { x: 'inset', y: 'inset' },
+                      formatYLabel: value => `${value}`,
+                      formatXLabel: value => `${value}`,
+                    }}
+                    domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
+                  >
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {({ points }: any) => (
+                      <>
+                        {/* Percentile curves */}
+                        <Line
+                          points={points.p5}
+                          color="#ccc"
+                          strokeWidth={1}
+                          curveType="natural"
+                          connectMissingData={true}
+                        />
+                        <AreaRange
+                          lowerPoints={points.p5}
+                          upperPoints={points.p25}
+                          connectMissingData={true}
+                          opacity={0.1}
+                        />
+                        <Line
+                          points={points.p25}
+                          color="#ccc"
+                          strokeWidth={1}
+                          curveType="natural"
+                          connectMissingData={true}
+                        />
+                        <AreaRange
+                          lowerPoints={points.p25}
+                          upperPoints={points.p75}
+                          connectMissingData={true}
+                          opacity={0.2}
+                        />
+                        <AreaRange
+                          lowerPoints={points.p75}
+                          upperPoints={points.p95}
+                          connectMissingData={true}
+                          opacity={0.1}
+                        />
+                        <Line
+                          points={points.p50}
+                          color="#999"
+                          strokeWidth={2}
+                          curveType="natural"
+                          connectMissingData={true}
+                        />
+                        <Line
+                          points={points.p75}
+                          color="#ccc"
+                          strokeWidth={1}
+                          curveType="natural"
+                          connectMissingData={true}
+                        />
+                        <Line
+                          points={points.p95}
+                          color="#ccc"
+                          strokeWidth={1}
+                          curveType="natural"
+                          connectMissingData={true}
+                        />
 
-                      {/* Child's measurements as scatter points */}
-                      <Scatter
-                        points={points.child}
-                        radius={6}
-                        shape="circle"
-                        style="fill"
-                        color={colors.primary}
-                      />
-                    </>
-                  )}
-                </CartesianChart>
-              </View>
-              <View style={styles.legend}>
-                <Text style={styles.legendTitle}>Percentile Curves</Text>
-                <View style={styles.legendItems}>
-                  <View style={styles.legendItem}>
-                    <View style={styles.legendLineGray} />
-                    <Text style={styles.legendText}>5th, 25th, 75th, 95th</Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View style={styles.legendLineDarkGray} />
-                    <Text style={styles.legendText}>50th (median)</Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View style={styles.legendCircle} />
-                    <Text style={styles.legendText}>Child's measurements</Text>
+                        {/* Child's measurements as scatter points */}
+                        <Scatter
+                          points={points.child}
+                          radius={6}
+                          shape="circle"
+                          style="fill"
+                          color={colors.primary}
+                        />
+                      </>
+                    )}
+                  </CartesianChart>
+                </View>
+                <View style={styles.legend}>
+                  <Text style={styles.legendTitle}>Percentile Curves</Text>
+                  <View style={styles.legendItems}>
+                    <View style={styles.legendItem}>
+                      <View style={styles.legendLineGray} />
+                      <Text style={styles.legendText}>5th, 25th, 75th, 95th</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={styles.legendLineDarkGray} />
+                      <Text style={styles.legendText}>50th (median)</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={styles.legendCircle} />
+                      <Text style={styles.legendText}>Child's measurements</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            </>
-          ) : (
-            <View style={styles.emptyChart}>
-              <Text style={styles.emptyChartText}>
-                No measurements to display
-              </Text>
-              <Text style={styles.emptyChartSubtext}>
-                Add measurements to see the growth chart
-              </Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {measurements.length > 0 && !loadingChart && (
-        <View style={styles.measurementsList}>
-          <Text style={styles.measurementsTitle}>All Measurements</Text>
-          {measurements.map(m => (
-            <Swipeable
-              key={m.id}
-              renderRightActions={(progress, dragX) =>
-                renderRightActions(progress, dragX, m.id)
-              }
-              overshootRight={false}
-            >
-              <View style={styles.measurementItem}>
-                <Text style={styles.measurementDate}>{m.date}</Text>
-                <Text style={styles.measurementValue}>
-                  {m.value.toFixed(1)} {getYAxisLabel()}
+              </>
+            ) : (
+              <View style={styles.emptyChart}>
+                <Text style={styles.emptyChartText}>
+                  No measurements to display
+                </Text>
+                <Text style={styles.emptyChartSubtext}>
+                  Add measurements to see the growth chart
                 </Text>
               </View>
-            </Swipeable>
-          ))}
-        </View>
-      )}
+            )}
+          </View>
+        )}
+
+        {measurements.length > 0 && !loadingChart && (
+          <View style={styles.measurementsList}>
+            <Text style={styles.measurementsTitle}>All Measurements</Text>
+            {measurements.map(m => (
+              <Swipeable
+                key={m.id}
+                renderRightActions={(progress, dragX) =>
+                  renderRightActions(progress, dragX, m.id)
+                }
+                overshootRight={false}
+              >
+                <View style={styles.measurementItem}>
+                  <Text style={styles.measurementDate}>{m.date}</Text>
+                  <Text style={styles.measurementValue}>
+                    {m.value.toFixed(1)} {getYAxisLabel()}
+                  </Text>
+                </View>
+              </Swipeable>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -583,39 +570,15 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      backgroundColor: colors.primary,
-      padding: 20,
-      paddingTop: 60,
-    },
     scrollView: {
       flex: 1,
     },
-    headerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    menuButton: {
-      marginRight: 12,
-      padding: 4,
-    },
-    menuIcon: {
-      fontSize: 28,
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    headerTitleContainer: {
-      flex: 1,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#fff',
-    },
-    standardToggle: {
+    standardToggleContainer: {
       flexDirection: 'row',
       gap: 12,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      backgroundColor: colors.primary,
     },
     standardButton: {
       flex: 1,

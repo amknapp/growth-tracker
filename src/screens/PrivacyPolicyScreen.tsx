@@ -4,18 +4,13 @@
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextStyle, TouchableOpacity, View } from 'react-native';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { ScrollView, StyleSheet, Text, TextStyle, View } from 'react-native';
 import { privacyPolicyContent } from '../content/privacyPolicy';
 import { useTheme } from '../hooks/useTheme';
+import AppHeader from '../components/AppHeader';
 
 const PrivacyPolicyScreen: React.FC = () => {
   const { colors } = useTheme();
-  const drawerNavigation = useNavigation();
-
-  const openDrawer = () => {
-    drawerNavigation.dispatch(DrawerActions.openDrawer());
-  };
 
   // Helper function to render text with inline bold formatting
   const renderTextWithBold = (
@@ -99,12 +94,7 @@ const PrivacyPolicyScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Privacy Policy</Text>
-      </View>
+      <AppHeader title="Privacy Policy" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -120,28 +110,6 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    header: {
-      backgroundColor: colors.primary,
-      paddingTop: 60,
-      paddingBottom: 20,
-      paddingHorizontal: 20,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    menuButton: {
-      marginRight: 16,
-      padding: 4,
-    },
-    menuIcon: {
-      fontSize: 28,
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: '#fff',
     },
     scrollView: {
       flex: 1,
