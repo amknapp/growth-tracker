@@ -228,8 +228,8 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
                     {measurement.type === 'weight'
                       ? 'Weight'
                       : measurement.type === 'height'
-                        ? 'Height'
-                        : 'Head Circumference'}
+                      ? 'Height'
+                      : 'Head Circumference'}
                   </Text>
                   <Text style={styles.historyValue}>
                     {measurement.value.toFixed(1)}{' '}
