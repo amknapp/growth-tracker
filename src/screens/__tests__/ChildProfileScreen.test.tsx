@@ -43,6 +43,15 @@ jest.mock('../../hooks/useTheme', () => ({
   }),
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({
+    top: 44,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  }),
+}));
+
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {
   const View = require('react-native').View;
