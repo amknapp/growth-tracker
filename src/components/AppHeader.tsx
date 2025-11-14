@@ -14,7 +14,11 @@ interface AppHeaderProps {
   subtitle2?: string;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ title, subtitle, subtitle2 }) => {
+const AppHeader: React.FC<AppHeaderProps> = ({
+  title,
+  subtitle,
+  subtitle2,
+}) => {
   const { colors } = useTheme();
   const drawerNavigation = useNavigation();
 

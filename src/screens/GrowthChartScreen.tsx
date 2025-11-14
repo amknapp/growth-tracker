@@ -344,10 +344,7 @@ const GrowthChartScreen: React.FC<Props> = ({
 
   return (
     <View style={styles.container}>
-      <AppHeader
-        title={child.name}
-        subtitle={getMeasurementLabel()}
-      />
+      <AppHeader title={child.name} subtitle={getMeasurementLabel()} />
 
       <View style={styles.standardToggleContainer}>
         <TouchableOpacity
@@ -512,7 +509,9 @@ const GrowthChartScreen: React.FC<Props> = ({
                   <View style={styles.legendItems}>
                     <View style={styles.legendItem}>
                       <View style={styles.legendLineGray} />
-                      <Text style={styles.legendText}>5th, 25th, 75th, 95th</Text>
+                      <Text style={styles.legendText}>
+                        5th, 25th, 75th, 95th
+                      </Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={styles.legendLineDarkGray} />
@@ -520,7 +519,9 @@ const GrowthChartScreen: React.FC<Props> = ({
                     </View>
                     <View style={styles.legendItem}>
                       <View style={styles.legendCircle} />
-                      <Text style={styles.legendText}>Child's measurements</Text>
+                      <Text style={styles.legendText}>
+                        Child's measurements
+                      </Text>
                     </View>
                   </View>
                 </View>
