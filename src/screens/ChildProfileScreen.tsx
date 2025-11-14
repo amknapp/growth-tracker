@@ -157,7 +157,7 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
@@ -173,7 +173,8 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text style={styles.birthDate}>Born: {child.birthDate}</Text>
       </View>
 
-      <View style={styles.section}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>Latest Measurements</Text>
 
         <TouchableOpacity
@@ -257,7 +258,8 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
           ))
         )}
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -271,6 +273,9 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       backgroundColor: colors.primary,
       padding: 20,
       paddingTop: 60,
+    },
+    scrollView: {
+      flex: 1,
     },
     headerTop: {
       flexDirection: 'row',

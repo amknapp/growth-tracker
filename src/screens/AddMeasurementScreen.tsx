@@ -169,18 +169,19 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const styles = getStyles(colors);
 
   return (
-    <ScrollView
-      style={styles.container}
-      keyboardShouldPersistTaps="handled"
-      nestedScrollEnabled={true}
-    >
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Measurement</Text>
       </View>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled={true}
+      >
+        <View style={styles.content}>
         <Text style={styles.sectionTitle}>
           Enter measurements (optional for each)
         </Text>
@@ -279,7 +280,8 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -310,6 +312,9 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       fontSize: 24,
       fontWeight: 'bold',
       color: '#fff',
+    },
+    scrollView: {
+      flex: 1,
     },
     content: {
       padding: 20,
