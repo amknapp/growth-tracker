@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../hooks/useTheme';
 
@@ -21,35 +22,61 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const { colors } = useTheme();
   const drawerNavigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const openDrawer = () => {
     drawerNavigation.dispatch(DrawerActions.openDrawer());
   };
 
-  const styles = getStyles(colors);
+  const styles = getStyles(colors, insets.top);
 
   return (
-    <View style={styles.header}>
+    <View
+      style={styles.header}
+      testID="app-header"
+      accessibilityLabel={title}
+      accessibilityRole="header"
+    >
       <View style={styles.headerTop}>
-        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={openDrawer}
+          accessibilityLabel="Open navigation menu"
+          accessibilityRole="button"
+          accessibilityHint="Opens the navigation drawer"
+          testID="menu-button"
+        >
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.title} accessibilityRole="header">
+            {title}
+          </Text>
         </View>
       </View>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-      {subtitle2 && <Text style={styles.subtitle2}>{subtitle2}</Text>}
+      {subtitle && (
+        <Text style={styles.subtitle} accessibilityRole="text">
+          {subtitle}
+        </Text>
+      )}
+      {subtitle2 && (
+        <Text style={styles.subtitle2} accessibilityRole="text">
+          {subtitle2}
+        </Text>
+      )}
     </View>
   );
 };
 
-const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
+const getStyles = (
+  colors: typeof import('../constants/colors').LightColors,
+  topInset: number,
+) =>
   StyleSheet.create({
     header: {
       backgroundColor: colors.primary,
       padding: 20,
-      paddingTop: 60,
+      paddingTop: Math.max(topInset + 20, 60), // Use safe area inset + padding, with minimum of 60
     },
     headerTop: {
       flexDirection: 'row',

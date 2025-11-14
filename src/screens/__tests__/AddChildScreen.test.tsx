@@ -37,6 +37,15 @@ jest.mock('../../hooks/useTheme', () => ({
   }),
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({
+    top: 44,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  }),
+}));
+
 // Mock Alert
 jest.spyOn(Alert, 'alert');
 

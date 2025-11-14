@@ -23,6 +23,24 @@ jest.mock('../../hooks/useTheme', () => ({
   }),
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({
+    top: 44,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  }),
+}));
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    dispatch: jest.fn(),
+  }),
+  DrawerActions: {
+    openDrawer: jest.fn(),
+  },
+}));
+
 describe('PrivacyPolicyScreen', () => {
   it('should render correctly', () => {
     const { getAllByText } = render(<PrivacyPolicyScreen />);
