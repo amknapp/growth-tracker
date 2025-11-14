@@ -129,14 +129,7 @@ function App() {
                   component={PrivacyPolicyScreen}
                   options={{
                     title: 'Privacy Policy',
-                    headerShown: true,
-                    headerStyle: {
-                      backgroundColor: Colors.primary,
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                      fontWeight: 'bold',
-                    },
+                    headerShown: false,
                   }}
                 />
                 <Drawer.Screen
@@ -144,14 +137,7 @@ function App() {
                   component={TermsOfServiceScreen}
                   options={{
                     title: 'Terms of Service',
-                    headerShown: true,
-                    headerStyle: {
-                      backgroundColor: Colors.primary,
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                      fontWeight: 'bold',
-                    },
+                    headerShown: false,
                   }}
                 />
               </Drawer.Navigator>

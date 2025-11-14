@@ -348,7 +348,7 @@ const GrowthChartScreen: React.FC<Props> = ({
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
@@ -398,7 +398,8 @@ const GrowthChartScreen: React.FC<Props> = ({
         </View>
       </View>
 
-      {error && (
+      <ScrollView style={styles.scrollView}>
+        {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorBannerText}>{error}</Text>
         </View>
@@ -571,7 +572,8 @@ const GrowthChartScreen: React.FC<Props> = ({
           ))}
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -585,6 +587,9 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       backgroundColor: colors.primary,
       padding: 20,
       paddingTop: 60,
+    },
+    scrollView: {
+      flex: 1,
     },
     headerTop: {
       flexDirection: 'row',
