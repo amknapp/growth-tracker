@@ -17,7 +17,13 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { AreaRange, CartesianChart, Line, Scatter } from 'victory-native';
+import {
+  AreaRange,
+  CartesianChart,
+  Line,
+  Scatter,
+  useChartTransformState,
+} from 'victory-native';
 import {
   GrowthChartNavigationProp,
   GrowthChartRouteProp,
@@ -67,6 +73,9 @@ const GrowthChartScreen: React.FC<Props> = ({
     Dimensions.get('window').width - 16,
   );
   const { colors } = useTheme();
+
+  // Pan and zoom state for the chart
+  const { state: chartTransformState } = useChartTransformState();
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -415,7 +424,12 @@ const GrowthChartScreen: React.FC<Props> = ({
 
         {!loadingChart && (
           <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>Growth Chart</Text>
+            <View style={styles.chartTitleContainer}>
+              <Text style={styles.chartTitle}>Growth Chart</Text>
+              <Text style={styles.chartHint}>
+                Pinch to zoom • Drag to pan
+              </Text>
+            </View>
 
             {victoryData ? (
               <>
@@ -433,6 +447,7 @@ const GrowthChartScreen: React.FC<Props> = ({
                       formatXLabel: value => `${value}`,
                     }}
                     domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
+                    transformState={chartTransformState}
                   >
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {({ points }: any) => (
@@ -646,12 +661,20 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       shadowRadius: 4,
       elevation: 3,
     },
+    chartTitleContainer: {
+      paddingLeft: 16,
+      marginBottom: 12,
+    },
     chartTitle: {
       fontSize: 18,
       fontWeight: '600',
       color: colors.text,
-      marginBottom: 12,
-      paddingLeft: 16,
+      marginBottom: 4,
+    },
+    chartHint: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontStyle: 'italic',
     },
     emptyChart: {
       height: 200,
