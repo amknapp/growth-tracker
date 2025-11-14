@@ -9,8 +9,22 @@ import ChildProfileScreen from '../ChildProfileScreen';
 import { useAppDataStore } from '../../store/appDataStore';
 import { Child, Measurement } from '../../types';
 
-// Mock dependencies
-jest.mock('../../store/appDataStore');
+// Create stable mock functions at module level
+const mockGetChild = jest.fn();
+const mockGetMeasurementsForChild = jest.fn();
+const mockDeleteMeasurement = jest.fn();
+
+// Create a stable store object
+const mockStore = {
+  getChild: mockGetChild,
+  getMeasurementsForChild: mockGetMeasurementsForChild,
+  deleteMeasurement: mockDeleteMeasurement,
+};
+
+// Mock the store to return stable function references
+jest.mock('../../store/appDataStore', () => ({
+  useAppDataStore: (selector: any) => selector(mockStore),
+}));
 
 jest.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({
@@ -38,11 +52,9 @@ jest.mock('react-native-gesture-handler', () => {
   };
 });
 
-// Store the callback for useFocusEffect
-let focusEffectCallback: any;
-
 jest.mock('@react-navigation/native', () => {
   const actualNav = jest.requireActual('@react-navigation/native');
+  const React = require('react');
   return {
     ...actualNav,
     useNavigation: () => ({
@@ -52,9 +64,11 @@ jest.mock('@react-navigation/native', () => {
       openDrawer: jest.fn(),
     },
     useFocusEffect: (callback: any) => {
-      focusEffectCallback = callback;
-      // Call it immediately to trigger data loading
-      callback();
+      // Use useEffect to call the callback once on mount
+      React.useEffect(() => {
+        callback();
+        return () => {}; // Cleanup function
+      }, []);
     },
   };
 });
@@ -108,31 +122,15 @@ describe('ChildProfileScreen', () => {
     },
   ];
 
-  const mockGetChild = jest.fn().mockReturnValue(mockChild);
-  const mockGetMeasurementsForChild = jest
-    .fn()
-    .mockReturnValue(mockMeasurements);
-  const mockDeleteMeasurement = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Set default return values for mock functions
     mockGetChild.mockReturnValue(mockChild);
     mockGetMeasurementsForChild.mockReturnValue(mockMeasurements);
-    (useAppDataStore as unknown as jest.Mock).mockImplementation(selector =>
-      selector({
-        getChild: mockGetChild,
-        getMeasurementsForChild: mockGetMeasurementsForChild,
-        deleteMeasurement: mockDeleteMeasurement,
-      }),
-    );
   });
 
   it('should render child profile correctly', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
-      mockMeasurements,
-    );
-
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
     );
@@ -145,11 +143,6 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display latest measurements', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
-      mockMeasurements,
-    );
-
     const { getAllByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
     );
@@ -162,8 +155,7 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display "No data" for measurement types with no data', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
+    mockGetMeasurementsForChild.mockReturnValue([]);
 
     const { getAllByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -176,11 +168,6 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should navigate to AddMeasurement when button is pressed', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
-      mockMeasurements,
-    );
-
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
     );
@@ -198,11 +185,6 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should navigate to GrowthChart when measurement card is pressed', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
-      mockMeasurements,
-    );
-
     const { getAllByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
     );
@@ -222,11 +204,6 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display all measurements in history', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
-      mockMeasurements,
-    );
-
     const { getByText, getAllByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
     );
@@ -239,8 +216,7 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should display empty state when no measurements', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
+    mockGetMeasurementsForChild.mockReturnValue([]);
 
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -253,8 +229,8 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should show error when child is not found', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(null);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
+    mockGetChild.mockReturnValue(null);
+    mockGetMeasurementsForChild.mockReturnValue([]);
 
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -266,8 +242,10 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should handle load data error', async () => {
-    (mockGetChild as jest.Mock).mockRejectedValue(new Error('Storage error'));
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
+    // Mock getChild to throw an error
+    mockGetChild.mockImplementation(() => {
+      throw new Error('Storage error');
+    });
 
     render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -287,8 +265,8 @@ describe('ChildProfileScreen', () => {
       sex: 'female',
     };
 
-    (mockGetChild as jest.Mock).mockReturnValue(femaleChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue([]);
+    mockGetChild.mockReturnValue(femaleChild);
+    mockGetMeasurementsForChild.mockReturnValue([]);
 
     const { getByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
@@ -300,11 +278,6 @@ describe('ChildProfileScreen', () => {
   });
 
   it('should format measurement types correctly in history', async () => {
-    (mockGetChild as jest.Mock).mockReturnValue(mockChild);
-    (mockGetMeasurementsForChild as jest.Mock).mockReturnValue(
-      mockMeasurements,
-    );
-
     const { getAllByText } = render(
       <ChildProfileScreen navigation={mockNavigation} route={mockRoute} />,
     );
