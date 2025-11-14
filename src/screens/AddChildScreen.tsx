@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,6 +28,7 @@ import {
   sanitizeName,
 } from '../utils/validation';
 import { logger } from '../utils/logger';
+import AppHeader from '../components/AppHeader';
 
 interface Props {
   navigation: NativeStackNavigationProp<RootStackParamList, 'AddChild'>;
@@ -42,12 +42,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(new Date());
   const [saving, setSaving] = useState(false);
-  const drawerNavigation = useNavigation();
   const { colors, colorScheme } = useTheme();
-
-  const openDrawer = () => {
-    drawerNavigation.dispatch(DrawerActions.openDrawer());
-  };
 
   const handleDateChange = (_event: unknown, selectedDate?: Date) => {
     if (selectedDate) {
@@ -123,116 +118,111 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Child</Text>
-      </View>
+      <AppHeader title="Add Child" />
       <ScrollView
         style={styles.scrollView}
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled={true}
       >
         <View style={styles.content}>
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter child's name"
-          placeholderTextColor={colors.textLight}
-        />
+          <Text style={styles.label}>Name</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter child's name"
+            placeholderTextColor={colors.textLight}
+          />
 
-        <Text style={styles.label}>Birth Date</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => {
-            Keyboard.dismiss();
-            setTempDate(birthDate || new Date());
-            setShowDatePicker(true);
-          }}
-        >
-          <Text style={birthDate ? styles.dateText : styles.datePlaceholder}>
-            {birthDate ? formatDate(birthDate) : 'Select birth date'}
-          </Text>
-        </TouchableOpacity>
-
-        {showDatePicker && (
-          <>
-            <DateTimePicker
-              testID="dateTimePicker"
-              value={tempDate}
-              mode="date"
-              display="inline"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
-              themeVariant={colorScheme}
-              style={styles.datePicker}
-            />
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={handleDatePickerDone}
-            >
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        <Text style={styles.label}>Sex</Text>
-        <View style={styles.sexContainer}>
+          <Text style={styles.label}>Birth Date</Text>
           <TouchableOpacity
-            style={[
-              styles.sexButton,
-              sex === 'male' && styles.sexButtonSelected,
-            ]}
-            onPress={() => setSex('male')}
+            style={styles.dateButton}
+            onPress={() => {
+              Keyboard.dismiss();
+              setTempDate(birthDate || new Date());
+              setShowDatePicker(true);
+            }}
           >
-            <Text
+            <Text style={birthDate ? styles.dateText : styles.datePlaceholder}>
+              {birthDate ? formatDate(birthDate) : 'Select birth date'}
+            </Text>
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <>
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={tempDate}
+                mode="date"
+                display="inline"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                themeVariant={colorScheme}
+                style={styles.datePicker}
+              />
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={handleDatePickerDone}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          <Text style={styles.label}>Sex</Text>
+          <View style={styles.sexContainer}>
+            <TouchableOpacity
               style={[
-                styles.sexButtonText,
-                sex === 'male' && styles.sexButtonTextSelected,
+                styles.sexButton,
+                sex === 'male' && styles.sexButtonSelected,
               ]}
+              onPress={() => setSex('male')}
             >
-              Boy
+              <Text
+                style={[
+                  styles.sexButtonText,
+                  sex === 'male' && styles.sexButtonTextSelected,
+                ]}
+              >
+                Boy
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.sexButton,
+                sex === 'female' && styles.sexButtonSelected,
+              ]}
+              onPress={() => setSex('female')}
+            >
+              <Text
+                style={[
+                  styles.sexButtonText,
+                  sex === 'female' && styles.sexButtonTextSelected,
+                ]}
+              >
+                Girl
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            <Text style={styles.saveButtonText}>
+              {saving ? 'Saving...' : 'Save Child Profile'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.sexButton,
-              sex === 'female' && styles.sexButtonSelected,
-            ]}
-            onPress={() => setSex('female')}
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}
           >
-            <Text
-              style={[
-                styles.sexButtonText,
-                sex === 'female' && styles.sexButtonTextSelected,
-              ]}
-            >
-              Girl
-            </Text>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Text style={styles.saveButtonText}>
-            {saving ? 'Saving...' : 'Save Child Profile'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
       </ScrollView>
     </View>
   );
@@ -243,28 +233,6 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    header: {
-      backgroundColor: colors.primary,
-      paddingTop: 60,
-      paddingBottom: 20,
-      paddingHorizontal: 20,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    menuButton: {
-      marginRight: 16,
-      padding: 4,
-    },
-    menuIcon: {
-      fontSize: 28,
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    headerTitle: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#fff',
     },
     scrollView: {
       flex: 1,

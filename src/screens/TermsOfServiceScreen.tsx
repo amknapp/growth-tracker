@@ -4,18 +4,13 @@
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { termsOfServiceContent } from '../content/termsOfService';
 import { useTheme } from '../hooks/useTheme';
+import AppHeader from '../components/AppHeader';
 
 const TermsOfServiceScreen: React.FC = () => {
   const { colors } = useTheme();
-  const drawerNavigation = useNavigation();
-
-  const openDrawer = () => {
-    drawerNavigation.dispatch(DrawerActions.openDrawer());
-  };
 
   // Parse markdown-style content for simple rendering
   const renderContent = () => {
@@ -80,12 +75,7 @@ const TermsOfServiceScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Terms of Service</Text>
-      </View>
+      <AppHeader title="Terms of Service" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -101,28 +91,6 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    header: {
-      backgroundColor: colors.primary,
-      paddingTop: 60,
-      paddingBottom: 20,
-      paddingHorizontal: 20,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    menuButton: {
-      marginRight: 16,
-      padding: 4,
-    },
-    menuIcon: {
-      fontSize: 28,
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: '#fff',
     },
     scrollView: {
       flex: 1,

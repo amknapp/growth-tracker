@@ -15,11 +15,7 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {
-  DrawerActions,
-  useFocusEffect,
-  useNavigation,
-} from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ChildProfileNavigationProp,
   ChildProfileRouteProp,
@@ -29,6 +25,7 @@ import { useAppDataStore } from '../store/appDataStore';
 import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { useTheme } from '../hooks/useTheme';
 import { logger } from '../utils/logger';
+import AppHeader from '../components/AppHeader';
 
 interface Props {
   navigation: ChildProfileNavigationProp;
@@ -45,7 +42,6 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const [child, setChild] = useState<Child | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [_loading, setLoading] = useState(true);
-  const drawerNavigation = useNavigation();
   const { colors } = useTheme();
 
   const loadData = useCallback(() => {
@@ -101,10 +97,6 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const age = getCurrentAge(child.birthDate);
   const ageText = formatAge(age);
 
-  const openDrawer = () => {
-    drawerNavigation.dispatch(DrawerActions.openDrawer());
-  };
-
   const handleDeleteMeasurement = (measurementId: string) => {
     Alert.alert(
       'Delete Measurement',
@@ -158,106 +150,96 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
-            <Text style={styles.menuIcon}>☰</Text>
-          </TouchableOpacity>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.name}>{child.name}</Text>
-          </View>
-        </View>
-        <Text style={styles.details}>
-          {child.sex === 'male' ? 'Boy' : 'Girl'} • {ageText}
-        </Text>
-        <Text style={styles.birthDate}>Born: {child.birthDate}</Text>
-      </View>
-
+      <AppHeader
+        title={child.name}
+        subtitle={`${child.sex === 'male' ? 'Boy' : 'Girl'} • ${ageText}`}
+        subtitle2={`Born: ${child.birthDate}`}
+      />
       <ScrollView style={styles.scrollView}>
         <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Latest Measurements</Text>
+          <Text style={styles.sectionTitle}>Latest Measurements</Text>
 
-        <TouchableOpacity
-          style={styles.measurementCard}
-          onPress={() => handleViewChart('weight')}
-        >
-          <View style={styles.measurementInfo}>
-            <Text style={styles.measurementLabel}>Weight</Text>
-            <Text style={styles.measurementValue}>
-              {getLatestMeasurement('weight')}
-            </Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
+          <TouchableOpacity
+            style={styles.measurementCard}
+            onPress={() => handleViewChart('weight')}
+          >
+            <View style={styles.measurementInfo}>
+              <Text style={styles.measurementLabel}>Weight</Text>
+              <Text style={styles.measurementValue}>
+                {getLatestMeasurement('weight')}
+              </Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.measurementCard}
+            onPress={() => handleViewChart('height')}
+          >
+            <View style={styles.measurementInfo}>
+              <Text style={styles.measurementLabel}>Height</Text>
+              <Text style={styles.measurementValue}>
+                {getLatestMeasurement('height')}
+              </Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.measurementCard}
+            onPress={() => handleViewChart('headCircumference')}
+          >
+            <View style={styles.measurementInfo}>
+              <Text style={styles.measurementLabel}>Head Circumference</Text>
+              <Text style={styles.measurementValue}>
+                {getLatestMeasurement('headCircumference')}
+              </Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.addButton} onPress={handleAddMeasurement}>
+          <Text style={styles.addButtonText}>+ Add Measurement</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.measurementCard}
-          onPress={() => handleViewChart('height')}
-        >
-          <View style={styles.measurementInfo}>
-            <Text style={styles.measurementLabel}>Height</Text>
-            <Text style={styles.measurementValue}>
-              {getLatestMeasurement('height')}
-            </Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </TouchableOpacity>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            All Measurements ({measurements.length})
+          </Text>
 
-        <TouchableOpacity
-          style={styles.measurementCard}
-          onPress={() => handleViewChart('headCircumference')}
-        >
-          <View style={styles.measurementInfo}>
-            <Text style={styles.measurementLabel}>Head Circumference</Text>
-            <Text style={styles.measurementValue}>
-              {getLatestMeasurement('headCircumference')}
-            </Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.addButton} onPress={handleAddMeasurement}>
-        <Text style={styles.addButtonText}>+ Add Measurement</Text>
-      </TouchableOpacity>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          All Measurements ({measurements.length})
-        </Text>
-
-        {measurements.length === 0 ? (
-          <Text style={styles.emptyText}>No measurements yet</Text>
-        ) : (
-          measurements.map(measurement => (
-            <Swipeable
-              key={measurement.id}
-              renderRightActions={(progress, dragX) =>
-                renderRightActions(progress, dragX, measurement.id)
-              }
-              overshootRight={false}
-            >
-              <View style={styles.historyCard}>
-                <Text style={styles.historyDate}>{measurement.date}</Text>
-                <Text style={styles.historyType}>
-                  {measurement.type === 'weight'
-                    ? 'Weight'
-                    : measurement.type === 'height'
-                    ? 'Height'
-                    : 'Head Circumference'}
-                </Text>
-                <Text style={styles.historyValue}>
-                  {measurement.value.toFixed(1)}{' '}
-                  {measurement.type === 'weight' ? 'kg' : 'cm'}
-                </Text>
-                {measurement.notes && (
-                  <Text style={styles.historyNotes}>{measurement.notes}</Text>
-                )}
-              </View>
-            </Swipeable>
-          ))
-        )}
-      </View>
+          {measurements.length === 0 ? (
+            <Text style={styles.emptyText}>No measurements yet</Text>
+          ) : (
+            measurements.map(measurement => (
+              <Swipeable
+                key={measurement.id}
+                renderRightActions={(progress, dragX) =>
+                  renderRightActions(progress, dragX, measurement.id)
+                }
+                overshootRight={false}
+              >
+                <View style={styles.historyCard}>
+                  <Text style={styles.historyDate}>{measurement.date}</Text>
+                  <Text style={styles.historyType}>
+                    {measurement.type === 'weight'
+                      ? 'Weight'
+                      : measurement.type === 'height'
+                      ? 'Height'
+                      : 'Head Circumference'}
+                  </Text>
+                  <Text style={styles.historyValue}>
+                    {measurement.value.toFixed(1)}{' '}
+                    {measurement.type === 'weight' ? 'kg' : 'cm'}
+                  </Text>
+                  {measurement.notes && (
+                    <Text style={styles.historyNotes}>{measurement.notes}</Text>
+                  )}
+                </View>
+              </Swipeable>
+            ))
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -269,46 +251,8 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    header: {
-      backgroundColor: colors.primary,
-      padding: 20,
-      paddingTop: 60,
-    },
     scrollView: {
       flex: 1,
-    },
-    headerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    menuButton: {
-      padding: 4,
-      marginRight: 12,
-    },
-    menuIcon: {
-      fontSize: 28,
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    headerTitleContainer: {
-      flex: 1,
-    },
-    name: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: '#fff',
-    },
-    details: {
-      fontSize: 16,
-      color: '#fff',
-      opacity: 0.9,
-      marginBottom: 4,
-    },
-    birthDate: {
-      fontSize: 14,
-      color: '#fff',
-      opacity: 0.8,
     },
     section: {
       padding: 16,

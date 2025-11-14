@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -31,6 +30,7 @@ import {
   sanitizeNotes,
 } from '../utils/validation';
 import { logger } from '../utils/logger';
+import AppHeader from '../components/AppHeader';
 
 interface Props {
   navigation: AddMeasurementNavigationProp;
@@ -49,12 +49,7 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const [tempDate, setTempDate] = useState<Date>(new Date());
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const drawerNavigation = useNavigation();
   const { colors, colorScheme } = useTheme();
-
-  const openDrawer = () => {
-    drawerNavigation.dispatch(DrawerActions.openDrawer());
-  };
 
   const handleDateChange = (_event: unknown, selectedDate?: Date) => {
     if (selectedDate) {
@@ -170,115 +165,110 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Measurement</Text>
-      </View>
+      <AppHeader title="Add Measurement" />
       <ScrollView
         style={styles.scrollView}
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled={true}
       >
         <View style={styles.content}>
-        <Text style={styles.sectionTitle}>
-          Enter measurements (optional for each)
-        </Text>
-        <Text style={styles.sectionSubtitle}>
-          Fill in any or all measurements taken at the same time
-        </Text>
-
-        <Text style={styles.label}>Weight (kg)</Text>
-        <TextInput
-          style={styles.input}
-          value={weight}
-          onChangeText={setWeight}
-          placeholder="Enter weight in kg"
-          placeholderTextColor={colors.textLight}
-          keyboardType="decimal-pad"
-        />
-
-        <Text style={styles.label}>Height (cm)</Text>
-        <TextInput
-          style={styles.input}
-          value={height}
-          onChangeText={setHeight}
-          placeholder="Enter height in cm"
-          placeholderTextColor={colors.textLight}
-          keyboardType="decimal-pad"
-        />
-
-        <Text style={styles.label}>Head Circumference (cm)</Text>
-        <TextInput
-          style={styles.input}
-          value={headCircumference}
-          onChangeText={setHeadCircumference}
-          placeholder="Enter head circumference in cm"
-          placeholderTextColor={colors.textLight}
-          keyboardType="decimal-pad"
-        />
-
-        <Text style={styles.label}>Date</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => {
-            Keyboard.dismiss();
-            setTempDate(date);
-            setShowDatePicker(true);
-          }}
-        >
-          <Text style={styles.dateText}>{formatDate(date)}</Text>
-        </TouchableOpacity>
-
-        {showDatePicker && (
-          <>
-            <DateTimePicker
-              testID="dateTimePicker"
-              value={tempDate}
-              mode="date"
-              display="inline"
-              onChange={handleDateChange}
-              maximumDate={new Date()}
-              themeVariant={colorScheme}
-              style={styles.datePicker}
-            />
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={handleDatePickerDone}
-            >
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        <Text style={styles.label}>Notes (Optional)</Text>
-        <TextInput
-          style={[styles.input, styles.notesInput]}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Add any notes about this measurement"
-          placeholderTextColor={colors.textLight}
-          multiline
-          numberOfLines={3}
-        />
-
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Text style={styles.saveButtonText}>
-            {saving ? 'Saving...' : 'Save Measurement'}
+          <Text style={styles.sectionTitle}>
+            Enter measurements (optional for each)
           </Text>
-        </TouchableOpacity>
+          <Text style={styles.sectionSubtitle}>
+            Fill in any or all measurements taken at the same time
+          </Text>
 
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
+          <Text style={styles.label}>Weight (kg)</Text>
+          <TextInput
+            style={styles.input}
+            value={weight}
+            onChangeText={setWeight}
+            placeholder="Enter weight in kg"
+            placeholderTextColor={colors.textLight}
+            keyboardType="decimal-pad"
+          />
+
+          <Text style={styles.label}>Height (cm)</Text>
+          <TextInput
+            style={styles.input}
+            value={height}
+            onChangeText={setHeight}
+            placeholder="Enter height in cm"
+            placeholderTextColor={colors.textLight}
+            keyboardType="decimal-pad"
+          />
+
+          <Text style={styles.label}>Head Circumference (cm)</Text>
+          <TextInput
+            style={styles.input}
+            value={headCircumference}
+            onChangeText={setHeadCircumference}
+            placeholder="Enter head circumference in cm"
+            placeholderTextColor={colors.textLight}
+            keyboardType="decimal-pad"
+          />
+
+          <Text style={styles.label}>Date</Text>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => {
+              Keyboard.dismiss();
+              setTempDate(date);
+              setShowDatePicker(true);
+            }}
+          >
+            <Text style={styles.dateText}>{formatDate(date)}</Text>
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <>
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={tempDate}
+                mode="date"
+                display="inline"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                themeVariant={colorScheme}
+                style={styles.datePicker}
+              />
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={handleDatePickerDone}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          <Text style={styles.label}>Notes (Optional)</Text>
+          <TextInput
+            style={[styles.input, styles.notesInput]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Add any notes about this measurement"
+            placeholderTextColor={colors.textLight}
+            multiline
+            numberOfLines={3}
+          />
+
+          <TouchableOpacity
+            style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            <Text style={styles.saveButtonText}>
+              {saving ? 'Saving...' : 'Save Measurement'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
       </View>
       </ScrollView>
     </View>
@@ -290,28 +280,6 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    header: {
-      backgroundColor: colors.primary,
-      paddingTop: 60,
-      paddingBottom: 20,
-      paddingHorizontal: 20,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    menuButton: {
-      marginRight: 16,
-      padding: 4,
-    },
-    menuIcon: {
-      fontSize: 28,
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    headerTitle: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#fff',
     },
     scrollView: {
       flex: 1,
