@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  Image,
   Keyboard,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
@@ -42,6 +44,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState<Date>(new Date());
   const [saving, setSaving] = useState(false);
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const { colors, colorScheme } = useTheme();
 
   const handleDateChange = (_event: unknown, selectedDate?: Date) => {
@@ -63,6 +66,80 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
     const month = String(dateValue.getMonth() + 1).padStart(2, '0');
     const day = String(dateValue.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };
+
+  const pickImageFromGallery = async () => {
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Please grant access to your photo library to select an avatar.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setAvatarUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      logger.error('Error picking image from gallery', error);
+      Alert.alert('Error', 'Failed to select image from gallery');
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const permissionResult =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Please grant camera access to take a photo.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setAvatarUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      logger.error('Error taking photo', error);
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
+  const showAvatarOptions = () => {
+    Alert.alert('Choose Avatar', "Select a photo for your child's profile", [
+      {
+        text: 'Take Photo',
+        onPress: takePhoto,
+      },
+      {
+        text: 'Choose from Gallery',
+        onPress: pickImageFromGallery,
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    ]);
   };
 
   const handleSave = async () => {
@@ -98,6 +175,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
         name: sanitizedName,
         birthDate: formatDate(birthDate),
         sex,
+        avatarUri: avatarUri || undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -125,6 +203,30 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
         nestedScrollEnabled={true}
       >
         <View style={styles.content}>
+          <Text style={styles.label}>Avatar (Optional)</Text>
+          <View style={styles.avatarContainer}>
+            <TouchableOpacity
+              style={styles.avatarButton}
+              onPress={showAvatarOptions}
+            >
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarPlaceholderText}>+</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            {avatarUri && (
+              <TouchableOpacity
+                style={styles.changeAvatarButton}
+                onPress={showAvatarOptions}
+              >
+                <Text style={styles.changeAvatarText}>Change Photo</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           <Text style={styles.label}>Name</Text>
           <TextInput
             style={styles.input}
@@ -349,6 +451,47 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     cancelButtonText: {
       color: colors.textSecondary,
       fontSize: 16,
+    },
+    avatarContainer: {
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    avatarButton: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      overflow: 'hidden',
+      backgroundColor: colors.card,
+      borderWidth: 2,
+      borderColor: colors.border,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+    },
+    avatarPlaceholder: {
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+    },
+    avatarPlaceholderText: {
+      fontSize: 48,
+      color: colors.textLight,
+      fontWeight: '300',
+    },
+    changeAvatarButton: {
+      marginTop: 12,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+    },
+    changeAvatarText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '600',
     },
   });
 
