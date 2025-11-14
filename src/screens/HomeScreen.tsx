@@ -8,6 +8,7 @@ import {
   Alert,
   Animated,
   FlatList,
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -113,6 +114,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.childCard}
           onPress={() => handleChildPress(item.id)}
         >
+          <View style={styles.avatarContainer}>
+            {item.avatarUri ? (
+              <Image source={{ uri: item.avatarUri }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Icon name="person" size={28} color={colors.textLight} />
+              </View>
+            )}
+          </View>
           <View style={styles.childInfo}>
             <Text style={styles.childName}>{item.name}</Text>
             <Text style={styles.childDetails}>
@@ -214,6 +224,22 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
+    },
+    avatarContainer: {
+      marginRight: 12,
+    },
+    avatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+    },
+    avatarPlaceholder: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     childInfo: {
       flex: 1,

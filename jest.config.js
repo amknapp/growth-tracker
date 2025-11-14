@@ -1,7 +1,7 @@
 module.exports = {
   preset: 'react-native',
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|react-native-vector-icons|react-native-gesture-handler|@shopify/react-native-skia|victory-native|react-native-reanimated|react-native-worklets|uuid)/)',
+    'node_modules/(?!(react-native|@react-native|@react-navigation|react-native-vector-icons|react-native-gesture-handler|@shopify/react-native-skia|victory-native|react-native-reanimated|react-native-worklets|uuid|expo-image-picker|expo-modules-core)/)',
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {

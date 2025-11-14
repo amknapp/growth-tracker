@@ -138,6 +138,31 @@ jest.mock('victory-native', () => {
   };
 });
 
+// Mock expo-image-picker
+jest.mock('expo-image-picker', () => ({
+  requestMediaLibraryPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: true })
+  ),
+  requestCameraPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: true })
+  ),
+  launchImageLibraryAsync: jest.fn(() =>
+    Promise.resolve({
+      canceled: false,
+      assets: [{ uri: 'mock-image-uri' }],
+    })
+  ),
+  launchCameraAsync: jest.fn(() =>
+    Promise.resolve({
+      canceled: false,
+      assets: [{ uri: 'mock-camera-uri' }],
+    })
+  ),
+  MediaTypeOptions: {
+    Images: 'Images',
+  },
+}));
+
 // Silence console warnings in tests
 global.console = {
   ...console,

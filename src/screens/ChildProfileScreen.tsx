@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 import {
   Alert,
   Animated,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -156,6 +157,12 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
         subtitle2={`Born: ${child.birthDate}`}
       />
       <ScrollView style={styles.scrollView}>
+        {child.avatarUri && (
+          <View style={styles.avatarSection}>
+            <Image source={{ uri: child.avatarUri }} style={styles.avatar} />
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Latest Measurements</Text>
 
@@ -256,6 +263,20 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     },
     scrollView: {
       flex: 1,
+    },
+    avatarSection: {
+      alignItems: 'center',
+      paddingVertical: 16,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    avatar: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      borderWidth: 3,
+      borderColor: colors.primary,
     },
     section: {
       padding: 16,

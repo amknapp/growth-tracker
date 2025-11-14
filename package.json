@@ -25,6 +25,7 @@
     "@shopify/react-native-skia": "^2.3.10",
     "@types/papaparse": "^5.3.16",
     "date-fns": "^4.1.0",
+    "expo-image-picker": "^17.0.8",
     "hermes-engine": "^0.11.0",
     "papaparse": "^5.5.3",
     "react": "^19.1.0",

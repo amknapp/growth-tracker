@@ -17,6 +17,7 @@ export interface Child {
   name: string;
   birthDate: string; // ISO 8601 date string
   sex: Sex;
+  avatarUri?: string; // Optional custom avatar image URI
   createdAt: string;
   updatedAt: string;
 }
