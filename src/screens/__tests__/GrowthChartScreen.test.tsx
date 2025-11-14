@@ -43,6 +43,15 @@ jest.mock('../../hooks/useTheme', () => ({
   }),
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({
+    top: 44,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  }),
+}));
+
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {
   const View = require('react-native').View;
@@ -221,7 +230,8 @@ describe('GrowthChartScreen', () => {
       );
 
       await waitFor(() => {
-        expect(getByText('John Doe - Weight')).toBeTruthy();
+        expect(getByText('John Doe')).toBeTruthy();
+        expect(getByText('Weight')).toBeTruthy();
         expect(getByTestId('cartesian-chart')).toBeTruthy();
         expect(getByTestId('transform-state-passed')).toBeTruthy();
       });
@@ -251,7 +261,8 @@ describe('GrowthChartScreen', () => {
       );
 
       await waitFor(() => {
-        expect(getByText('John Doe - Height')).toBeTruthy();
+        expect(getByText('John Doe')).toBeTruthy();
+        expect(getByText('Height')).toBeTruthy();
         expect(getByTestId('transform-state-passed')).toBeTruthy();
       });
     });
@@ -280,7 +291,8 @@ describe('GrowthChartScreen', () => {
       );
 
       await waitFor(() => {
-        expect(getByText('John Doe - Head Circumference')).toBeTruthy();
+        expect(getByText('John Doe')).toBeTruthy();
+        expect(getByText('Head Circumference')).toBeTruthy();
         expect(getByTestId('transform-state-passed')).toBeTruthy();
       });
     });
@@ -293,7 +305,8 @@ describe('GrowthChartScreen', () => {
       );
 
       await waitFor(() => {
-        expect(getByText('John Doe - Weight')).toBeTruthy();
+        expect(getByText('John Doe')).toBeTruthy();
+        expect(getByText('Weight')).toBeTruthy();
       });
     });
 
