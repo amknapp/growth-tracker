@@ -6,37 +6,24 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../hooks/useTheme';
 import { getThemeColors, ThemeInfo, ThemeName } from '../constants/colors';
+import AppHeader from '../components/AppHeader';
 
 const THEME_OPTIONS: ThemeName[] = ['purple', 'blue', 'green', 'coral', 'teal'];
 
 export default function ThemeSettingsScreen() {
   const { colors, themeName, setThemeName, isDark } = useTheme();
-  const navigation = useNavigation();
 
   const handleThemeSelect = async (theme: ThemeName) => {
     await setThemeName(theme);
   };
 
-  const openDrawer = () => {
-    navigation.dispatch(DrawerActions.openDrawer());
-  };
-
   return (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
-    >
-      <View style={[styles.header, { backgroundColor: colors.primary }]}>
-        <TouchableOpacity style={styles.menuButton} onPress={openDrawer}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Theme Settings</Text>
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <AppHeader title="Theme Settings" />
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Choose Your Color Theme
@@ -139,36 +126,15 @@ export default function ThemeSettingsScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuButton: {
-    marginRight: 16,
-    padding: 4,
-  },
-  menuIcon: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-  },
   container: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   section: {
