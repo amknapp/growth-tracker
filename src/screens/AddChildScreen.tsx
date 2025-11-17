@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
@@ -70,25 +70,26 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
 
   const pickImageFromGallery = async () => {
     try {
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permissionResult.granted) {
-        Alert.alert(
-          'Permission Required',
-          'Please grant access to your photo library to select an avatar.'
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        includeBase64: false,
+        maxWidth: 1000,
+        maxHeight: 1000,
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (result.didCancel) {
+        return;
+      }
+
+      if (result.errorCode) {
+        logger.error('Error picking image from gallery', result.errorMessage);
+        Alert.alert('Error', 'Failed to select image from gallery');
+        return;
+      }
+
+      if (result.assets && result.assets.length > 0 && result.assets[0].uri) {
         setAvatarUri(result.assets[0].uri);
       }
     } catch (error) {
@@ -99,24 +100,26 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
 
   const takePhoto = async () => {
     try {
-      const permissionResult =
-        await ImagePicker.requestCameraPermissionsAsync();
+      const result = await launchCamera({
+        mediaType: 'photo',
+        includeBase64: false,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        quality: 0.8,
+        saveToPhotos: false,
+      });
 
-      if (!permissionResult.granted) {
-        Alert.alert(
-          'Permission Required',
-          'Please grant camera access to take a photo.'
-        );
+      if (result.didCancel) {
         return;
       }
 
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
+      if (result.errorCode) {
+        logger.error('Error taking photo', result.errorMessage);
+        Alert.alert('Error', 'Failed to take photo');
+        return;
+      }
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (result.assets && result.assets.length > 0 && result.assets[0].uri) {
         setAvatarUri(result.assets[0].uri);
       }
     } catch (error) {
