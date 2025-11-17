@@ -82,6 +82,6 @@
     "node": ">=20"
   },
   "overrides": {
-    "react-native-reanimated": "4.1.3"
+    "react-native-reanimated": "$react-native-reanimated"
   }
 }
