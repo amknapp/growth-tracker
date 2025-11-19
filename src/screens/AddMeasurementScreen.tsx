@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import {
   Alert,
   Keyboard,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +15,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
 import {
   AddMeasurementNavigationProp,
@@ -51,9 +54,22 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const [saving, setSaving] = useState(false);
   const { colors, colorScheme } = useTheme();
 
-  const handleDateChange = (_event: unknown, selectedDate?: Date) => {
-    if (selectedDate) {
-      setTempDate(selectedDate);
+  const handleDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date,
+  ) => {
+    // On Android, close the picker immediately
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      // Only update the date if user pressed OK (not Cancel)
+      if (event.type === 'set' && selectedDate) {
+        setDate(selectedDate);
+      }
+    } else {
+      // On iOS, just update the temp date
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
     }
   };
 
@@ -227,18 +243,20 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
                 testID="dateTimePicker"
                 value={tempDate}
                 mode="date"
-                display="inline"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 onChange={handleDateChange}
                 maximumDate={new Date()}
                 themeVariant={colorScheme}
-                style={styles.datePicker}
+                style={Platform.OS === 'ios' ? styles.datePicker : undefined}
               />
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={handleDatePickerDone}
-              >
-                <Text style={styles.doneButtonText}>Done</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  style={styles.doneButton}
+                  onPress={handleDatePickerDone}
+                >
+                  <Text style={styles.doneButtonText}>Done</Text>
+                </TouchableOpacity>
+              )}
             </>
           )}
 

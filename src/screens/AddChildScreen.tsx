@@ -19,7 +19,9 @@ import {
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
 import { RootStackParamList } from '../types/navigation';
 import { Child, Sex } from '../types';
@@ -49,9 +51,22 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const { colors, colorScheme } = useTheme();
 
-  const handleDateChange = (_event: unknown, selectedDate?: Date) => {
-    if (selectedDate) {
-      setTempDate(selectedDate);
+  const handleDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date,
+  ) => {
+    // On Android, close the picker immediately
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      // Only update the date if user pressed OK (not Cancel)
+      if (event.type === 'set' && selectedDate) {
+        setBirthDate(selectedDate);
+      }
+    } else {
+      // On iOS, just update the temp date
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
     }
   };
 
@@ -108,17 +123,18 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: 'Camera Permission',
-            message: 'Growth Tracker needs access to your camera to take photos.',
+            message:
+              'Growth Tracker needs access to your camera to take photos.',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
-          }
+          },
         );
 
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
           Alert.alert(
             'Permission Required',
-            'Camera permission is required to take photos.'
+            'Camera permission is required to take photos.',
           );
           return;
         }
@@ -283,18 +299,20 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
                 testID="dateTimePicker"
                 value={tempDate}
                 mode="date"
-                display="inline"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 onChange={handleDateChange}
                 maximumDate={new Date()}
                 themeVariant={colorScheme}
-                style={styles.datePicker}
+                style={Platform.OS === 'ios' ? styles.datePicker : undefined}
               />
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={handleDatePickerDone}
-              >
-                <Text style={styles.doneButtonText}>Done</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  style={styles.doneButton}
+                  onPress={handleDatePickerDone}
+                >
+                  <Text style={styles.doneButtonText}>Done</Text>
+                </TouchableOpacity>
+              )}
             </>
           )}
 
