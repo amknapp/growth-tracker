@@ -187,7 +187,12 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const showAvatarOptions = () => {
-    Alert.alert('Choose Avatar', "Select a photo for your child's profile", [
+    const message =
+      Platform.OS === 'ios'
+        ? "Select a photo for your child's profile\n\nNote: Camera capture requires a physical iOS device and won't work in the simulator. Use 'Choose from Gallery' instead."
+        : "Select a photo for your child's profile";
+
+    Alert.alert('Choose Avatar', message, [
       {
         text: 'Take Photo',
         onPress: takePhoto,
