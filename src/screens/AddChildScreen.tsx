@@ -8,6 +8,8 @@ import {
   Alert,
   Image,
   Keyboard,
+  PermissionsAndroid,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -100,6 +102,28 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
 
   const takePhoto = async () => {
     try {
+      // Request camera permission on Android
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message: 'Growth Tracker needs access to your camera to take photos.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert(
+            'Permission Required',
+            'Camera permission is required to take photos.'
+          );
+          return;
+        }
+      }
+
       const result = await launchCamera({
         mediaType: 'photo',
         includeBase64: false,
