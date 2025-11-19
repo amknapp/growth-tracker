@@ -154,8 +154,26 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
       }
 
       if (result.errorCode) {
-        logger.error('Error taking photo', result.errorMessage);
-        Alert.alert('Error', 'Failed to take photo');
+        // Handle specific error codes
+        if (result.errorCode === 'camera_unavailable') {
+          logger.error('Camera unavailable', result.errorMessage);
+          Alert.alert(
+            'Camera Unavailable',
+            'Camera is not available on this device.',
+          );
+        } else if (result.errorCode === 'permission') {
+          logger.error('Camera permission denied', result.errorMessage);
+          Alert.alert(
+            'Permission Required',
+            'Camera permission is required to take photos. Please enable camera access in your device settings.',
+          );
+        } else {
+          logger.error('Error taking photo', result.errorMessage || result.errorCode);
+          Alert.alert(
+            'Error',
+            `Failed to take photo: ${result.errorMessage || result.errorCode}`,
+          );
+        }
         return;
       }
 
@@ -164,7 +182,7 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (error) {
       logger.error('Error taking photo', error);
-      Alert.alert('Error', 'Failed to take photo');
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
     }
   };
 
