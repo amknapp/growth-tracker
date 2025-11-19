@@ -49,9 +49,19 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const { colors, colorScheme } = useTheme();
 
-  const handleDateChange = (_event: unknown, selectedDate?: Date) => {
-    if (selectedDate) {
-      setTempDate(selectedDate);
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    // On Android, close the picker immediately
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      // Only update the date if user pressed OK (not Cancel)
+      if (event.type === 'set' && selectedDate) {
+        setBirthDate(selectedDate);
+      }
+    } else {
+      // On iOS, just update the temp date
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
     }
   };
 
@@ -283,18 +293,20 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
                 testID="dateTimePicker"
                 value={tempDate}
                 mode="date"
-                display="inline"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 onChange={handleDateChange}
                 maximumDate={new Date()}
                 themeVariant={colorScheme}
-                style={styles.datePicker}
+                style={Platform.OS === 'ios' ? styles.datePicker : undefined}
               />
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={handleDatePickerDone}
-              >
-                <Text style={styles.doneButtonText}>Done</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  style={styles.doneButton}
+                  onPress={handleDatePickerDone}
+                >
+                  <Text style={styles.doneButtonText}>Done</Text>
+                </TouchableOpacity>
+              )}
             </>
           )}
 
