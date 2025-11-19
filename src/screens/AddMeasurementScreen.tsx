@@ -15,7 +15,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
 import {
   AddMeasurementNavigationProp,
@@ -52,7 +54,10 @@ const AddMeasurementScreen: React.FC<Props> = ({ navigation, route }) => {
   const [saving, setSaving] = useState(false);
   const { colors, colorScheme } = useTheme();
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date,
+  ) => {
     // On Android, close the picker immediately
     if (Platform.OS === 'android') {
       setShowDatePicker(false);

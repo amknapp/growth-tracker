@@ -19,7 +19,9 @@ import {
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
 import { RootStackParamList } from '../types/navigation';
 import { Child, Sex } from '../types';
@@ -49,7 +51,10 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const { colors, colorScheme } = useTheme();
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date,
+  ) => {
     // On Android, close the picker immediately
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
@@ -118,17 +123,18 @@ const AddChildScreen: React.FC<Props> = ({ navigation }) => {
           PermissionsAndroid.PERMISSIONS.CAMERA,
           {
             title: 'Camera Permission',
-            message: 'Growth Tracker needs access to your camera to take photos.',
+            message:
+              'Growth Tracker needs access to your camera to take photos.',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
-          }
+          },
         );
 
         if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
           Alert.alert(
             'Permission Required',
-            'Camera permission is required to take photos.'
+            'Camera permission is required to take photos.',
           );
           return;
         }
