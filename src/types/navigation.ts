@@ -16,6 +16,7 @@ export type DrawerParamList = {
 export type RootStackParamList = {
   Home: undefined;
   AddChild: undefined;
+  EditChild: { childId: string };
   ChildProfile: { childId: string };
   AddMeasurement: { childId: string };
   GrowthChart: { childId: string; measurementType: string };
@@ -54,3 +55,10 @@ export type GrowthChartNavigationProp = NativeStackNavigationProp<
 >;
 
 export type GrowthChartRouteProp = RouteProp<RootStackParamList, 'GrowthChart'>;
+
+export type EditChildNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'EditChild'
+>;
+
+export type EditChildRouteProp = RouteProp<RootStackParamList, 'EditChild'>;
