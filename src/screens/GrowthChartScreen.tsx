@@ -24,6 +24,7 @@ import {
   Scatter,
   useChartTransformState,
 } from 'victory-native';
+import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import {
   GrowthChartNavigationProp,
   GrowthChartRouteProp,
@@ -74,8 +75,21 @@ const GrowthChartScreen: React.FC<Props> = ({
   );
   const { colors } = useTheme();
 
-  // Pan and zoom state for the chart
-  const { state: chartTransformState } = useChartTransformState();
+  // Pan and zoom state for the chart - with throttling to prevent Skia crashes
+  const { state: rawTransformState } = useChartTransformState();
+  const lastUpdateTime = useSharedValue(0);
+  const lastTransformValue = useSharedValue(rawTransformState.value);
+
+  // Throttle to 30fps (33ms between updates) to reduce Skia rendering load
+  const chartTransformState = useDerivedValue(() => {
+    'worklet';
+    const now = Date.now();
+    if (now - lastUpdateTime.value >= 33) {
+      lastUpdateTime.value = now;
+      lastTransformValue.value = rawTransformState.value;
+    }
+    return lastTransformValue.value;
+  });
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
