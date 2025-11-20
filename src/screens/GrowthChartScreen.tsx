@@ -163,9 +163,10 @@ const GrowthChartScreen: React.FC<Props> = ({
       return null;
     }
 
-    // Determine age range - focus on relevant window
-    let minAge = 0;
-    let maxAge = 36; // Default to first 3 years
+    // Determine age range - focus on relevant window for initial view,
+    // but load more data to support zooming out
+    let initialMinAge = 0;
+    let initialMaxAge = 36; // Default initial view: first 3 years
 
     if (measurements.length > 0) {
       const childAges = measurements.map(m =>
@@ -175,27 +176,36 @@ const GrowthChartScreen: React.FC<Props> = ({
       const childMaxAge = Math.max(...childAges);
 
       // Show window around child's data (±3 months buffer on each side)
-      minAge = Math.max(0, Math.floor(childMinAge - 3));
-      maxAge = Math.ceil(childMaxAge + 3);
+      initialMinAge = Math.max(0, Math.floor(childMinAge - 3));
+      initialMaxAge = Math.ceil(childMaxAge + 3);
 
-      // Ensure at least 6 months wide
-      const range = maxAge - minAge;
+      // Ensure at least 6 months wide for initial view
+      const range = initialMaxAge - initialMinAge;
       if (range < 6) {
         const expansion = (6 - range) / 2;
-        minAge = Math.max(0, minAge - expansion);
-        maxAge = maxAge + expansion;
+        initialMinAge = Math.max(0, initialMinAge - expansion);
+        initialMaxAge = initialMaxAge + expansion;
       }
     }
+
+    // Load data with extended range to support zooming
+    // Use a reasonable maximum (60 months = 5 years for most pediatric charts)
+    // This provides plenty of room for zoom out without overwhelming the renderer
+    const minAge = 0;
+    const maxAge = Math.max(60, initialMaxAge + 12); // At least 5 years, or child's age + 1 year
 
     // Get all unique x values (ages) that we need
     const percentilesToShow = [5, 25, 50, 75, 95];
     const allAges = new Set<number>();
 
-    // Collect ages from percentile curves - include ALL data points
-    // so that zooming out will show the full curves
+    // Collect ages from percentile curves within the extended range
     percentilesToShow.forEach(percentile => {
       const curve = getPercentileCurve(percentile, chartData);
-      curve.forEach(point => allAges.add(point.ageInMonths));
+      curve
+        .filter(
+          point => point.ageInMonths >= minAge && point.ageInMonths <= maxAge,
+        )
+        .forEach(point => allAges.add(point.ageInMonths));
     });
 
     // Sort all ages from percentiles
