@@ -191,14 +191,11 @@ const GrowthChartScreen: React.FC<Props> = ({
     const percentilesToShow = [5, 25, 50, 75, 95];
     const allAges = new Set<number>();
 
-    // Collect ages from percentile curves
+    // Collect ages from percentile curves - include ALL data points
+    // so that zooming out will show the full curves
     percentilesToShow.forEach(percentile => {
       const curve = getPercentileCurve(percentile, chartData);
-      curve
-        .filter(
-          point => point.ageInMonths >= minAge && point.ageInMonths <= maxAge,
-        )
-        .forEach(point => allAges.add(point.ageInMonths));
+      curve.forEach(point => allAges.add(point.ageInMonths));
     });
 
     // Sort all ages from percentiles
