@@ -75,8 +75,7 @@ const GrowthChartScreen: React.FC<Props> = ({
   const { colors } = useTheme();
 
   // Pan and zoom state for the chart
-  // Temporarily disabled to debug gesture handler error
-  // const chartTransformState = useChartTransformState();
+  const chartTransformState = useChartTransformState();
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -441,7 +440,7 @@ const GrowthChartScreen: React.FC<Props> = ({
             <View style={styles.chartTitleContainer}>
               <Text style={styles.chartTitle}>Growth Chart</Text>
               <Text style={styles.chartHint}>
-                View zoomed to child's measurements
+                Pinch to zoom • Drag to pan
               </Text>
             </View>
 
@@ -465,6 +464,7 @@ const GrowthChartScreen: React.FC<Props> = ({
                       formatXLabel: value => `${value}`,
                     }}
                     domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
+                    transformState={chartTransformState}
                   >
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {({ points }: any) => (
@@ -542,6 +542,7 @@ const GrowthChartScreen: React.FC<Props> = ({
                           top: 20,
                           bottom: 20,
                         }}
+                        transformState={chartTransformState}
                       >
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {({ points }: any) => (
