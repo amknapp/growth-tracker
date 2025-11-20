@@ -76,20 +76,25 @@ const GrowthChartScreen: React.FC<Props> = ({
   const { colors } = useTheme();
 
   // Pan and zoom state for the chart - with throttling to prevent Skia crashes
-  const { state: rawTransformState } = useChartTransformState();
+  const rawChartTransform = useChartTransformState();
   const lastUpdateTime = useSharedValue(0);
-  const lastTransformValue = useSharedValue(rawTransformState.value);
+  const lastTransformValue = useSharedValue(rawChartTransform.state.value);
 
   // Throttle to 30fps (33ms between updates) to reduce Skia rendering load
-  const chartTransformState = useDerivedValue(() => {
+  const throttledState = useDerivedValue(() => {
     'worklet';
     const now = Date.now();
     if (now - lastUpdateTime.value >= 33) {
       lastUpdateTime.value = now;
-      lastTransformValue.value = rawTransformState.value;
+      lastTransformValue.value = rawChartTransform.state.value;
     }
     return lastTransformValue.value;
   });
+
+  // Wrap throttled state in the expected structure
+  const chartTransformState = useMemo(() => ({
+    state: throttledState,
+  }), [throttledState]);
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
