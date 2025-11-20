@@ -74,6 +74,10 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
     navigation.navigate('GrowthChart', { childId, measurementType });
   };
 
+  const handleEditProfile = () => {
+    navigation.navigate('EditChild', { childId });
+  };
+
   const getLatestMeasurement = (type: string): string => {
     const typedMeasurements = measurements.filter(m => m.type === type);
     if (typedMeasurements.length === 0) {
@@ -162,6 +166,11 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
             <Image source={{ uri: child.avatarUri }} style={styles.avatar} />
           </View>
         )}
+
+        <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+          <Icon name="edit" size={18} color="#fff" />
+          <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Latest Measurements</Text>
@@ -387,6 +396,29 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       width: 80,
       height: '100%',
       borderRadius: 8,
+    },
+    editButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+      marginHorizontal: 16,
+      marginTop: 16,
+      marginBottom: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 4,
+      gap: 8,
+    },
+    editButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '600',
     },
   });
 

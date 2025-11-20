@@ -19,6 +19,7 @@ import { useAppDataStore } from './src/store/appDataStore';
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
 import AddChildScreen from './src/screens/AddChildScreen';
+import EditChildScreen from './src/screens/EditChildScreen';
 import ChildProfileScreen from './src/screens/ChildProfileScreen';
 import AddMeasurementScreen from './src/screens/AddMeasurementScreen';
 import GrowthChartScreen from './src/screens/GrowthChartScreen';
@@ -58,6 +59,11 @@ function HomeStack() {
       <Stack.Screen
         name="AddChild"
         component={AddChildScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EditChild"
+        component={EditChildScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
