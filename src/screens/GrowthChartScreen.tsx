@@ -223,7 +223,7 @@ const GrowthChartScreen: React.FC<Props> = ({
     };
 
     const percentileData: ChartDataPoint[] = sortedAges.map(age => {
-      const dataPoint: ChartDataPoint = { x: age };
+      const dataPoint: ChartDataPoint = { x: age, child: undefined };
       percentilesToShow.forEach(percentile => {
         const curve = getPercentileCurve(percentile, chartData);
         const point = curve.find(p => Math.abs(p.ageInMonths - age) < 0.1);
@@ -235,9 +235,14 @@ const GrowthChartScreen: React.FC<Props> = ({
       return dataPoint;
     });
 
-    // Create data points for child's measurements
+    // Create data points for child's measurements with all fields
     const childMeasurementData = measurements.map(m => ({
       x: calculateAgeInMonths(child.birthDate, m.date),
+      p5: undefined,
+      p25: undefined,
+      p50: undefined,
+      p75: undefined,
+      p95: undefined,
       child: m.value,
     }));
 
@@ -251,6 +256,8 @@ const GrowthChartScreen: React.FC<Props> = ({
       yKeys: ['p5', 'p25', 'p50', 'p75', 'p95', 'child'],
       minAge,
       maxAge,
+      initialMinAge,
+      initialMaxAge,
     };
   }, [child, chartData, measurements]);
 
@@ -446,6 +453,9 @@ const GrowthChartScreen: React.FC<Props> = ({
                     xKey="x"
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     yKeys={victoryData.yKeys as any}
+                    domain={{
+                      x: [victoryData.initialMinAge, victoryData.initialMaxAge],
+                    }}
                     axisOptions={{
                       tickCount: 5,
                       labelColor: colors.primary,
