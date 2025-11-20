@@ -91,10 +91,11 @@ const GrowthChartScreen: React.FC<Props> = ({
     return lastTransformValue.value;
   });
 
-  // Wrap throttled state in the expected structure
+  // Preserve all properties from rawChartTransform, only replace state
   const chartTransformState = useMemo(() => ({
+    ...rawChartTransform,
     state: throttledState,
-  }), [throttledState]);
+  }), [rawChartTransform, throttledState]);
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
