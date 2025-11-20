@@ -447,7 +447,6 @@ const GrowthChartScreen: React.FC<Props> = ({
             {victoryData ? (
               <>
                 <View style={styles.chartCanvasContainer}>
-                  {/* Percentile curves chart */}
                   <CartesianChart
                     data={victoryData.percentileData}
                     xKey="x"
@@ -467,81 +466,101 @@ const GrowthChartScreen: React.FC<Props> = ({
                     transformState={chartTransformState}
                   >
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {({ points }: any) => (
-                      <>
-                        {/* Percentile curves */}
-                        <Line
-                          points={points.p5}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                        />
-                        <Line
-                          points={points.p25}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                        />
-                        <Line
-                          points={points.p50}
-                          color="#999"
-                          strokeWidth={2}
-                          curveType="natural"
-                        />
-                        <Line
-                          points={points.p75}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                        />
-                        <Line
-                          points={points.p95}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                        />
-                      </>
-                    )}
-                  </CartesianChart>
+                    {({ points, chartBounds }: any) => {
+                      // Calculate Y domain from percentile data
+                      const allYValues = victoryData.percentileData.flatMap(d => [
+                        d.p5,
+                        d.p25,
+                        d.p50,
+                        d.p75,
+                        d.p95,
+                      ]);
+                      const minY = Math.min(...allYValues);
+                      const maxY = Math.max(...allYValues);
+                      const yRange = maxY - minY;
 
-                  {/* Child measurements chart - overlaid */}
-                  {victoryData.childMeasurementData.length > 0 && (
-                    <View style={StyleSheet.absoluteFill}>
-                      <CartesianChart
-                        data={victoryData.childMeasurementData}
-                        xKey="x"
-                        yKeys={['y']}
-                        domain={{
-                          x: [
-                            victoryData.initialMinAge,
-                            victoryData.initialMaxAge,
-                          ],
-                        }}
-                        axisOptions={{
-                          tickCount: 0,
-                          labelColor: 'transparent',
-                        }}
-                        domainPadding={{
-                          left: 10,
-                          right: 10,
-                          top: 20,
-                          bottom: 20,
-                        }}
-                        transformState={chartTransformState}
-                      >
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {({ points }: any) => (
-                          <Scatter
-                            points={points.y}
-                            radius={6}
-                            shape="circle"
-                            style="fill"
-                            color={colors.primary}
+                      // Helper to convert data coordinates to screen coordinates
+                      const dataToScreen = (dataX: number, dataY: number) => {
+                        const xRatio =
+                          (dataX - victoryData.initialMinAge) /
+                          (victoryData.initialMaxAge - victoryData.initialMinAge);
+                        const yRatio = (dataY - minY) / yRange;
+                        return {
+                          x:
+                            chartBounds.left + xRatio * (chartBounds.right - chartBounds.left),
+                          y:
+                            chartBounds.bottom -
+                            yRatio * (chartBounds.bottom - chartBounds.top),
+                        };
+                      };
+
+                      return (
+                        <>
+                          {/* Percentile curves with shaded areas */}
+                          <Line
+                            points={points.p5}
+                            color="#ccc"
+                            strokeWidth={1}
+                            curveType="natural"
                           />
-                        )}
-                      </CartesianChart>
-                    </View>
-                  )}
+                          <AreaRange
+                            lowerPoints={points.p5}
+                            upperPoints={points.p25}
+                            opacity={0.1}
+                          />
+                          <Line
+                            points={points.p25}
+                            color="#ccc"
+                            strokeWidth={1}
+                            curveType="natural"
+                          />
+                          <AreaRange
+                            lowerPoints={points.p25}
+                            upperPoints={points.p75}
+                            opacity={0.2}
+                          />
+                          <Line
+                            points={points.p50}
+                            color="#999"
+                            strokeWidth={2}
+                            curveType="natural"
+                          />
+                          <AreaRange
+                            lowerPoints={points.p75}
+                            upperPoints={points.p95}
+                            opacity={0.1}
+                          />
+                          <Line
+                            points={points.p75}
+                            color="#ccc"
+                            strokeWidth={1}
+                            curveType="natural"
+                          />
+                          <Line
+                            points={points.p95}
+                            color="#ccc"
+                            strokeWidth={1}
+                            curveType="natural"
+                          />
+
+                          {/* Child measurements - manually positioned */}
+                          {victoryData.childMeasurementData.map((point, i) => {
+                            const screenPos = dataToScreen(point.x, point.y);
+                            return (
+                              <Scatter
+                                key={`child-${i}`}
+                                points={[screenPos]}
+                                radius={6}
+                                shape="circle"
+                                style="fill"
+                                color={colors.primary}
+                              />
+                            );
+                          })}
+                        </>
+                      );
+                    }}
+                  </CartesianChart>
                 </View>
                 <View style={styles.legend}>
                   <Text style={styles.legendTitle}>Percentile Curves</Text>
