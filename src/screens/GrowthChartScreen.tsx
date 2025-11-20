@@ -211,49 +211,48 @@ const GrowthChartScreen: React.FC<Props> = ({
     // Sort all ages from percentiles
     const sortedAges = Array.from(allAges).sort((a, b) => a - b);
 
-    // Build data array with all percentiles
-    type ChartDataPoint = {
+    // Build data array with ONLY percentile values (no mixed data)
+    type PercentileDataPoint = {
       x: number;
-      p5?: number;
-      p25?: number;
-      p50?: number;
-      p75?: number;
-      p95?: number;
-      child?: number;
+      p5: number;
+      p25: number;
+      p50: number;
+      p75: number;
+      p95: number;
     };
 
-    const percentileData: ChartDataPoint[] = sortedAges.map(age => {
-      const dataPoint: ChartDataPoint = { x: age, child: undefined };
-      percentilesToShow.forEach(percentile => {
-        const curve = getPercentileCurve(percentile, chartData);
-        const point = curve.find(p => Math.abs(p.ageInMonths - age) < 0.1);
-        if (point) {
-          const key = `p${percentile}` as keyof Omit<ChartDataPoint, 'x'>;
-          dataPoint[key] = point.value;
-        }
-      });
-      return dataPoint;
-    });
+    const percentileData: PercentileDataPoint[] = sortedAges
+      .map(age => {
+        const dataPoint: Partial<PercentileDataPoint> = { x: age };
+        let hasAllValues = true;
 
-    // Create data points for child's measurements with all fields
+        percentilesToShow.forEach(percentile => {
+          const curve = getPercentileCurve(percentile, chartData);
+          const point = curve.find(p => Math.abs(p.ageInMonths - age) < 0.1);
+          if (point) {
+            const key = `p${percentile}` as keyof Omit<
+              PercentileDataPoint,
+              'x'
+            >;
+            dataPoint[key] = point.value;
+          } else {
+            hasAllValues = false;
+          }
+        });
+
+        return hasAllValues ? (dataPoint as PercentileDataPoint) : null;
+      })
+      .filter((p): p is PercentileDataPoint => p !== null);
+
+    // Create completely separate data array for child's measurements
     const childMeasurementData = measurements.map(m => ({
       x: calculateAgeInMonths(child.birthDate, m.date),
-      p5: undefined,
-      p25: undefined,
-      p50: undefined,
-      p75: undefined,
-      p95: undefined,
-      child: m.value,
+      y: m.value,
     }));
 
-    // Combine percentile data and child measurement data
-    const data = [...percentileData, ...childMeasurementData].sort(
-      (a, b) => a.x - b.x,
-    );
-
     return {
-      data,
-      yKeys: ['p5', 'p25', 'p50', 'p75', 'p95', 'child'],
+      percentileData,
+      childMeasurementData,
       minAge,
       maxAge,
       initialMinAge,
@@ -448,11 +447,12 @@ const GrowthChartScreen: React.FC<Props> = ({
             {victoryData ? (
               <>
                 <View style={styles.chartCanvasContainer}>
+                  {/* Percentile curves chart */}
                   <CartesianChart
-                    data={victoryData.data}
+                    data={victoryData.percentileData}
                     xKey="x"
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    yKeys={victoryData.yKeys as any}
+                    yKeys={['p5', 'p25', 'p50', 'p75', 'p95'] as any}
                     domain={{
                       x: [victoryData.initialMinAge, victoryData.initialMaxAge],
                     }}
@@ -475,66 +475,73 @@ const GrowthChartScreen: React.FC<Props> = ({
                           color="#ccc"
                           strokeWidth={1}
                           curveType="natural"
-                          connectMissingData={true}
-                        />
-                        <AreaRange
-                          lowerPoints={points.p5}
-                          upperPoints={points.p25}
-                          connectMissingData={true}
-                          opacity={0.1}
                         />
                         <Line
                           points={points.p25}
                           color="#ccc"
                           strokeWidth={1}
                           curveType="natural"
-                          connectMissingData={true}
-                        />
-                        <AreaRange
-                          lowerPoints={points.p25}
-                          upperPoints={points.p75}
-                          connectMissingData={true}
-                          opacity={0.2}
-                        />
-                        <AreaRange
-                          lowerPoints={points.p75}
-                          upperPoints={points.p95}
-                          connectMissingData={true}
-                          opacity={0.1}
                         />
                         <Line
                           points={points.p50}
                           color="#999"
                           strokeWidth={2}
                           curveType="natural"
-                          connectMissingData={true}
                         />
                         <Line
                           points={points.p75}
                           color="#ccc"
                           strokeWidth={1}
                           curveType="natural"
-                          connectMissingData={true}
                         />
                         <Line
                           points={points.p95}
                           color="#ccc"
                           strokeWidth={1}
                           curveType="natural"
-                          connectMissingData={true}
-                        />
-
-                        {/* Child's measurements as scatter points */}
-                        <Scatter
-                          points={points.child}
-                          radius={6}
-                          shape="circle"
-                          style="fill"
-                          color={colors.primary}
                         />
                       </>
                     )}
                   </CartesianChart>
+
+                  {/* Child measurements chart - overlaid */}
+                  {victoryData.childMeasurementData.length > 0 && (
+                    <View style={StyleSheet.absoluteFill}>
+                      <CartesianChart
+                        data={victoryData.childMeasurementData}
+                        xKey="x"
+                        yKeys={['y']}
+                        domain={{
+                          x: [
+                            victoryData.initialMinAge,
+                            victoryData.initialMaxAge,
+                          ],
+                        }}
+                        axisOptions={{
+                          tickCount: 0,
+                          labelColor: 'transparent',
+                        }}
+                        domainPadding={{
+                          left: 10,
+                          right: 10,
+                          top: 20,
+                          bottom: 20,
+                        }}
+                        transformState={chartTransformState}
+                      >
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {({ points }: any) => (
+                          <Scatter
+                            points={points.y}
+                            radius={6}
+                            shape="circle"
+                            style="fill"
+                            color={colors.primary}
+                          />
+                        )}
+                      </CartesianChart>
+                    </View>
+                  )}
                 </View>
                 <View style={styles.legend}>
                   <Text style={styles.legendTitle}>Percentile Curves</Text>
