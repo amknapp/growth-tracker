@@ -55,9 +55,11 @@ jest.mock('react-native-safe-area-context', () => ({
 // Mock react-native-gesture-handler
 jest.mock('react-native-gesture-handler', () => {
   const View = require('react-native').View;
+  const ScrollView = require('react-native').ScrollView;
   return {
     Swipeable: View,
     GestureHandlerRootView: View,
+    ScrollView: ScrollView,
   };
 });
 
@@ -80,7 +82,9 @@ jest.mock('victory-native', () => ({
         <Text testID="transform-state-passed">
           {transformState ? 'transform-enabled' : 'transform-disabled'}
         </Text>
-        {typeof children === 'function' ? children({ points: mockPoints }) : children}
+        {typeof children === 'function'
+          ? children({ points: mockPoints })
+          : children}
       </View>
     );
   },
@@ -175,11 +179,11 @@ describe('GrowthChartScreen', () => {
   const mockChartData = [
     { ageInMonths: 0, L: 0.3487, M: 3.3464, S: 0.14602 },
     { ageInMonths: 1, L: 0.2297, M: 4.4709, S: 0.13395 },
-    { ageInMonths: 2, L: 0.1970, M: 5.5675, S: 0.12385 },
+    { ageInMonths: 2, L: 0.197, M: 5.5675, S: 0.12385 },
     { ageInMonths: 3, L: 0.1738, M: 6.3762, S: 0.11727 },
     { ageInMonths: 4, L: 0.1553, M: 7.0023, S: 0.11316 },
-    { ageInMonths: 5, L: 0.1395, M: 7.5105, S: 0.11080 },
-    { ageInMonths: 6, L: 0.1257, M: 7.9340, S: 0.10958 },
+    { ageInMonths: 5, L: 0.1395, M: 7.5105, S: 0.1108 },
+    { ageInMonths: 6, L: 0.1257, M: 7.934, S: 0.10958 },
   ];
 
   beforeEach(() => {
@@ -379,9 +383,7 @@ describe('GrowthChartScreen', () => {
       );
 
       await waitFor(() => {
-        expect(
-          getByText(/Failed to load growth chart data/),
-        ).toBeTruthy();
+        expect(getByText(/Failed to load growth chart data/)).toBeTruthy();
       });
     });
 
@@ -404,10 +406,15 @@ describe('GrowthChartScreen', () => {
 
   describe('Chart Standard Toggle', () => {
     it('should load CDC data by default', async () => {
-      render(<GrowthChartScreen navigation={mockNavigation} route={mockRoute} />);
+      render(
+        <GrowthChartScreen navigation={mockNavigation} route={mockRoute} />,
+      );
 
       await waitFor(() => {
-        expect(CDCDataService.getChartData).toHaveBeenCalledWith('weight', 'male');
+        expect(CDCDataService.getChartData).toHaveBeenCalledWith(
+          'weight',
+          'male',
+        );
       });
     });
 
