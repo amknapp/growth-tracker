@@ -9,13 +9,12 @@ import {
   Alert,
   Animated,
   Dimensions,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import { ScrollView, Swipeable } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {
   AreaRange,
@@ -163,9 +162,9 @@ const GrowthChartScreen: React.FC<Props> = ({
       return null;
     }
 
-    // Determine age range - focus on relevant window
-    let minAge = 0;
-    let maxAge = 36; // Default to first 3 years
+    // Calculate initial viewport based on child's data
+    let initialMinAge = 0;
+    let initialMaxAge = 36; // Default to first 3 years
 
     if (measurements.length > 0) {
       const childAges = measurements.map(m =>
@@ -175,30 +174,30 @@ const GrowthChartScreen: React.FC<Props> = ({
       const childMaxAge = Math.max(...childAges);
 
       // Show window around child's data (±3 months buffer on each side)
-      minAge = Math.max(0, Math.floor(childMinAge - 3));
-      maxAge = Math.ceil(childMaxAge + 3);
+      initialMinAge = Math.max(0, Math.floor(childMinAge - 3));
+      initialMaxAge = Math.ceil(childMaxAge + 3);
 
       // Ensure at least 6 months wide
-      const range = maxAge - minAge;
+      const range = initialMaxAge - initialMinAge;
       if (range < 6) {
         const expansion = (6 - range) / 2;
-        minAge = Math.max(0, minAge - expansion);
-        maxAge = maxAge + expansion;
+        initialMinAge = Math.max(0, initialMinAge - expansion);
+        initialMaxAge = initialMaxAge + expansion;
       }
     }
 
-    // Get all unique x values (ages) that we need
+    // Calculate initial y-axis range based on visible x-axis window
+    let initialMinY: number | undefined;
+    let initialMaxY: number | undefined;
+
+    // Get all unique x values (ages) from the full dataset
     const percentilesToShow = [5, 25, 50, 75, 95];
     const allAges = new Set<number>();
 
-    // Collect ages from percentile curves
+    // Collect all ages from percentile curves (no filtering - show full data for panning)
     percentilesToShow.forEach(percentile => {
       const curve = getPercentileCurve(percentile, chartData);
-      curve
-        .filter(
-          point => point.ageInMonths >= minAge && point.ageInMonths <= maxAge,
-        )
-        .forEach(point => allAges.add(point.ageInMonths));
+      curve.forEach(point => allAges.add(point.ageInMonths));
     });
 
     // Sort all ages from percentiles
@@ -239,11 +238,50 @@ const GrowthChartScreen: React.FC<Props> = ({
       (a, b) => a.x - b.x,
     );
 
+    // Calculate y-axis range from data in the initial x-axis window
+    const visibleData = data.filter(
+      d => d.x >= initialMinAge && d.x <= initialMaxAge,
+    );
+
+    if (visibleData.length > 0) {
+      const allYValues: number[] = [];
+      visibleData.forEach(point => {
+        if ('p5' in point && point.p5 !== undefined) {
+          allYValues.push(point.p5);
+        }
+        if ('p25' in point && point.p25 !== undefined) {
+          allYValues.push(point.p25);
+        }
+        if ('p50' in point && point.p50 !== undefined) {
+          allYValues.push(point.p50);
+        }
+        if ('p75' in point && point.p75 !== undefined) {
+          allYValues.push(point.p75);
+        }
+        if ('p95' in point && point.p95 !== undefined) {
+          allYValues.push(point.p95);
+        }
+        if ('child' in point && point.child !== undefined) {
+          allYValues.push(point.child);
+        }
+      });
+
+      if (allYValues.length > 0) {
+        const minY = Math.min(...allYValues);
+        const maxY = Math.max(...allYValues);
+        const padding = (maxY - minY) * 0.1; // 10% padding
+        initialMinY = Math.max(0, minY - padding);
+        initialMaxY = maxY + padding;
+      }
+    }
+
     return {
       data,
       yKeys: ['p5', 'p25', 'p50', 'p75', 'p95', 'child'],
-      minAge,
-      maxAge,
+      initialMinAge,
+      initialMaxAge,
+      initialMinY,
+      initialMaxY,
     };
   }, [child, chartData, measurements]);
 
@@ -391,22 +429,156 @@ const GrowthChartScreen: React.FC<Props> = ({
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView}>
-        {error && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerText}>{error}</Text>
-          </View>
-        )}
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{error}</Text>
+        </View>
+      )}
 
-        {loadingChart && (
-          <View style={styles.chartLoadingContainer}>
-            <ActivityIndicator size="large" color="#4A90E2" />
-            <Text style={styles.chartLoadingText}>
-              Loading growth chart data...
+      {loadingChart && (
+        <View style={styles.chartLoadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+          <Text style={styles.chartLoadingText}>
+            Loading growth chart data...
+          </Text>
+        </View>
+      )}
+
+      {!loadingChart && victoryData && (
+        <View style={styles.chartContainer}>
+          <View style={styles.chartTitleContainer}>
+            <Text style={styles.chartTitle}>Growth Chart</Text>
+            <Text style={styles.chartHint}>Pinch to zoom • Drag to pan</Text>
+          </View>
+
+          <View style={styles.chartCanvasContainer}>
+            <CartesianChart
+              data={victoryData.data}
+              xKey="x"
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              yKeys={victoryData.yKeys as any}
+              axisOptions={{
+                tickCount: 5,
+                labelColor: colors.primary,
+                labelPosition: { x: 'inset', y: 'inset' },
+                formatYLabel: value => `${value}`,
+                formatXLabel: value => `${value}`,
+              }}
+              domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
+              domain={{
+                x: [victoryData.initialMinAge, victoryData.initialMaxAge],
+                y:
+                  victoryData.initialMinY !== undefined &&
+                  victoryData.initialMaxY !== undefined
+                    ? [victoryData.initialMinY, victoryData.initialMaxY]
+                    : undefined,
+              }}
+              transformState={chartTransformState}
+            >
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {({ points }: any) => (
+                <>
+                  {/* Percentile curves */}
+                  <Line
+                    points={points.p5}
+                    color="#ccc"
+                    strokeWidth={1}
+                    curveType="natural"
+                    connectMissingData={true}
+                  />
+                  <AreaRange
+                    lowerPoints={points.p5}
+                    upperPoints={points.p25}
+                    connectMissingData={true}
+                    opacity={0.1}
+                  />
+                  <Line
+                    points={points.p25}
+                    color="#ccc"
+                    strokeWidth={1}
+                    curveType="natural"
+                    connectMissingData={true}
+                  />
+                  <AreaRange
+                    lowerPoints={points.p25}
+                    upperPoints={points.p75}
+                    connectMissingData={true}
+                    opacity={0.2}
+                  />
+                  <AreaRange
+                    lowerPoints={points.p75}
+                    upperPoints={points.p95}
+                    connectMissingData={true}
+                    opacity={0.1}
+                  />
+                  <Line
+                    points={points.p50}
+                    color="#999"
+                    strokeWidth={2}
+                    curveType="natural"
+                    connectMissingData={true}
+                  />
+                  <Line
+                    points={points.p75}
+                    color="#ccc"
+                    strokeWidth={1}
+                    curveType="natural"
+                    connectMissingData={true}
+                  />
+                  <Line
+                    points={points.p95}
+                    color="#ccc"
+                    strokeWidth={1}
+                    curveType="natural"
+                    connectMissingData={true}
+                  />
+
+                  {/* Child's measurements as scatter points */}
+                  <Scatter
+                    points={points.child}
+                    radius={6}
+                    shape="circle"
+                    style="fill"
+                    color={colors.primary}
+                  />
+                </>
+              )}
+            </CartesianChart>
+          </View>
+          <View style={styles.legend}>
+            <Text style={styles.legendTitle}>Percentile Curves</Text>
+            <View style={styles.legendItems}>
+              <View style={styles.legendItem}>
+                <View style={styles.legendLineGray} />
+                <Text style={styles.legendText}>5th, 25th, 75th, 95th</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={styles.legendLineDarkGray} />
+                <Text style={styles.legendText}>50th (median)</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={styles.legendCircle} />
+                <Text style={styles.legendText}>Child's measurements</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {!loadingChart && !victoryData && (
+        <View style={styles.emptyChartContainer}>
+          <View style={styles.emptyChart}>
+            <Text style={styles.emptyChartText}>
+              No measurements to display
+            </Text>
+            <Text style={styles.emptyChartSubtext}>
+              Add measurements to see the growth chart
             </Text>
           </View>
-        )}
+        </View>
+      )}
 
+      <ScrollView style={styles.scrollView}>
         {latestPercentileData && !loadingChart && (
           <View style={styles.statsCard}>
             <Text style={styles.statsTitle}>Latest Measurement</Text>
@@ -419,138 +591,6 @@ const GrowthChartScreen: React.FC<Props> = ({
             <Text style={styles.statsInterpretation}>
               {interpretPercentile(latestPercentileData.percentile)}
             </Text>
-          </View>
-        )}
-
-        {!loadingChart && (
-          <View style={styles.chartContainer}>
-            <View style={styles.chartTitleContainer}>
-              <Text style={styles.chartTitle}>Growth Chart</Text>
-              <Text style={styles.chartHint}>
-                Pinch to zoom • Drag to pan
-              </Text>
-            </View>
-
-            {victoryData ? (
-              <>
-                <View style={styles.chartCanvasContainer}>
-                  <CartesianChart
-                    data={victoryData.data}
-                    xKey="x"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    yKeys={victoryData.yKeys as any}
-                    axisOptions={{
-                      tickCount: 5,
-                      labelColor: colors.primary,
-                      labelPosition: { x: 'inset', y: 'inset' },
-                      formatYLabel: value => `${value}`,
-                      formatXLabel: value => `${value}`,
-                    }}
-                    domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
-                    transformState={chartTransformState}
-                  >
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {({ points }: any) => (
-                      <>
-                        {/* Percentile curves */}
-                        <Line
-                          points={points.p5}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                          connectMissingData={true}
-                        />
-                        <AreaRange
-                          lowerPoints={points.p5}
-                          upperPoints={points.p25}
-                          connectMissingData={true}
-                          opacity={0.1}
-                        />
-                        <Line
-                          points={points.p25}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                          connectMissingData={true}
-                        />
-                        <AreaRange
-                          lowerPoints={points.p25}
-                          upperPoints={points.p75}
-                          connectMissingData={true}
-                          opacity={0.2}
-                        />
-                        <AreaRange
-                          lowerPoints={points.p75}
-                          upperPoints={points.p95}
-                          connectMissingData={true}
-                          opacity={0.1}
-                        />
-                        <Line
-                          points={points.p50}
-                          color="#999"
-                          strokeWidth={2}
-                          curveType="natural"
-                          connectMissingData={true}
-                        />
-                        <Line
-                          points={points.p75}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                          connectMissingData={true}
-                        />
-                        <Line
-                          points={points.p95}
-                          color="#ccc"
-                          strokeWidth={1}
-                          curveType="natural"
-                          connectMissingData={true}
-                        />
-
-                        {/* Child's measurements as scatter points */}
-                        <Scatter
-                          points={points.child}
-                          radius={6}
-                          shape="circle"
-                          style="fill"
-                          color={colors.primary}
-                        />
-                      </>
-                    )}
-                  </CartesianChart>
-                </View>
-                <View style={styles.legend}>
-                  <Text style={styles.legendTitle}>Percentile Curves</Text>
-                  <View style={styles.legendItems}>
-                    <View style={styles.legendItem}>
-                      <View style={styles.legendLineGray} />
-                      <Text style={styles.legendText}>
-                        5th, 25th, 75th, 95th
-                      </Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                      <View style={styles.legendLineDarkGray} />
-                      <Text style={styles.legendText}>50th (median)</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                      <View style={styles.legendCircle} />
-                      <Text style={styles.legendText}>
-                        Child's measurements
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </>
-            ) : (
-              <View style={styles.emptyChart}>
-                <Text style={styles.emptyChartText}>
-                  No measurements to display
-                </Text>
-                <Text style={styles.emptyChartSubtext}>
-                  Add measurements to see the growth chart
-                </Text>
-              </View>
-            )}
           </View>
         )}
 
@@ -675,6 +715,19 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       fontSize: 12,
       color: colors.textSecondary,
       fontStyle: 'italic',
+    },
+    emptyChartContainer: {
+      backgroundColor: colors.card,
+      margin: 16,
+      marginTop: 0,
+      paddingVertical: 16,
+      paddingRight: 16,
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
     },
     emptyChart: {
       height: 200,
