@@ -26,6 +26,7 @@ import GrowthChartScreen from './src/screens/GrowthChartScreen';
 import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
 import ThemeSettingsScreen from './src/screens/ThemeSettingsScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 
 // Custom Drawer
 import CustomDrawerContent from './src/components/CustomDrawerContent';
@@ -91,11 +92,17 @@ const DrawerContent = (props: DrawerContentComponentProps) => (
 
 function App() {
   const initialize = useAppDataStore(state => state.initialize);
+  const initialized = useAppDataStore(state => state.initialized);
+  const hasSeenOnboarding = useAppDataStore(state => state.hasSeenOnboarding);
 
   // Initialize the store once on app startup (triggers Face ID once)
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  if (!initialized) {
+    return null;
+  }
 
   return (
     <ErrorBoundary>
@@ -106,48 +113,52 @@ function App() {
               barStyle="light-content"
               backgroundColor={Colors.primary}
             />
-            <NavigationContainer>
-              <Drawer.Navigator
-                drawerContent={DrawerContent}
-                screenOptions={{
-                  drawerStyle: {
-                    width: 280,
-                  },
-                  headerShown: false,
-                  swipeEnabled: false,
-                }}
-              >
-                <Drawer.Screen
-                  name="HomeStack"
-                  component={HomeStack}
-                  options={{ title: 'Home' }}
-                />
-                <Drawer.Screen
-                  name="ThemeSettings"
-                  component={ThemeSettingsScreen}
-                  options={{
-                    title: 'Theme Settings',
+            {!hasSeenOnboarding ? (
+              <OnboardingScreen />
+            ) : (
+              <NavigationContainer>
+                <Drawer.Navigator
+                  drawerContent={DrawerContent}
+                  screenOptions={{
+                    drawerStyle: {
+                      width: 280,
+                    },
                     headerShown: false,
+                    swipeEnabled: false,
                   }}
-                />
-                <Drawer.Screen
-                  name="PrivacyPolicy"
-                  component={PrivacyPolicyScreen}
-                  options={{
-                    title: 'Privacy Policy',
-                    headerShown: false,
-                  }}
-                />
-                <Drawer.Screen
-                  name="TermsOfService"
-                  component={TermsOfServiceScreen}
-                  options={{
-                    title: 'Terms of Service',
-                    headerShown: false,
-                  }}
-                />
-              </Drawer.Navigator>
-            </NavigationContainer>
+                >
+                  <Drawer.Screen
+                    name="HomeStack"
+                    component={HomeStack}
+                    options={{ title: 'Home' }}
+                  />
+                  <Drawer.Screen
+                    name="ThemeSettings"
+                    component={ThemeSettingsScreen}
+                    options={{
+                      title: 'Theme Settings',
+                      headerShown: false,
+                    }}
+                  />
+                  <Drawer.Screen
+                    name="PrivacyPolicy"
+                    component={PrivacyPolicyScreen}
+                    options={{
+                      title: 'Privacy Policy',
+                      headerShown: false,
+                    }}
+                  />
+                  <Drawer.Screen
+                    name="TermsOfService"
+                    component={TermsOfServiceScreen}
+                    options={{
+                      title: 'Terms of Service',
+                      headerShown: false,
+                    }}
+                  />
+                </Drawer.Navigator>
+              </NavigationContainer>
+            )}
           </SafeAreaProvider>
         </GestureHandlerRootView>
       </ThemeProvider>

@@ -46,6 +46,7 @@ describe('SecureStorage', () => {
   const mockAppData: AppData = {
     children: [mockChild],
     measurements: [mockMeasurement],
+    hasSeenOnboarding: false,
   };
 
   beforeEach(() => {
@@ -126,6 +127,7 @@ describe('SecureStorage', () => {
         JSON.stringify({
           children: [mockChild],
           measurements: [],
+          hasSeenOnboarding: false,
         }),
         expect.any(Object),
       );

@@ -13,12 +13,14 @@ interface AppDataStore {
   // State
   children: Child[];
   measurements: Measurement[];
+  hasSeenOnboarding: boolean;
   loading: boolean;
   initialized: boolean;
   error: Error | null;
 
   // Actions
   initialize: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
   addChild: (child: Child) => Promise<void>;
   updateChild: (childId: string, updates: Partial<Child>) => Promise<void>;
   deleteChild: (childId: string) => Promise<void>;
@@ -37,10 +39,12 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
   // Initial state
   children: [],
   measurements: [],
+  hasSeenOnboarding: false,
   loading: false,
   initialized: false,
   error: null,
 
+  // Initialize: Load data from secure storage once (triggers Face ID once)
   // Initialize: Load data from secure storage once (triggers Face ID once)
   initialize: async () => {
     const state = get();
@@ -54,12 +58,30 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
       set({
         children: data.children,
         measurements: data.measurements,
+        hasSeenOnboarding: !!data.hasSeenOnboarding,
         initialized: true,
         loading: false,
       });
     } catch (error) {
       logger.error('Error initializing app data:', error);
       set({ error: error as Error, loading: false });
+      throw error;
+    }
+  },
+
+  completeOnboarding: async () => {
+    const { children, measurements } = get();
+    set({ hasSeenOnboarding: true });
+
+    try {
+      await SecureStorage.saveData({
+        children,
+        measurements,
+        hasSeenOnboarding: true,
+      });
+    } catch (error) {
+      logger.error('Error saving onboarding status:', error);
+      set({ hasSeenOnboarding: false });
       throw error;
     }
   },
@@ -75,6 +97,7 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
       await SecureStorage.saveData({
         children: newChildren,
         measurements,
+        hasSeenOnboarding: get().hasSeenOnboarding,
       });
     } catch (error) {
       logger.error('Error adding child:', error);
@@ -106,6 +129,7 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
       await SecureStorage.saveData({
         children: newChildren,
         measurements,
+        hasSeenOnboarding: get().hasSeenOnboarding,
       });
     } catch (error) {
       logger.error('Error updating child:', error);
@@ -127,6 +151,7 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
       await SecureStorage.saveData({
         children: newChildren,
         measurements: newMeasurements,
+        hasSeenOnboarding: get().hasSeenOnboarding,
       });
     } catch (error) {
       logger.error('Error deleting child:', error);
@@ -153,6 +178,7 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
       await SecureStorage.saveData({
         children,
         measurements: newMeasurements,
+        hasSeenOnboarding: get().hasSeenOnboarding,
       });
     } catch (error) {
       logger.error('Error adding measurement:', error);
@@ -188,6 +214,7 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
       await SecureStorage.saveData({
         children,
         measurements: newMeasurements,
+        hasSeenOnboarding: get().hasSeenOnboarding,
       });
     } catch (error) {
       logger.error('Error updating measurement:', error);
@@ -208,6 +235,7 @@ export const useAppDataStore = create<AppDataStore>((set, get) => ({
       await SecureStorage.saveData({
         children,
         measurements: newMeasurements,
+        hasSeenOnboarding: get().hasSeenOnboarding,
       });
     } catch (error) {
       logger.error('Error deleting measurement:', error);

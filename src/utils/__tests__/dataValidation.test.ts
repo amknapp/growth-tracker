@@ -29,6 +29,7 @@ describe('validateAppData', () => {
     const data: AppData = {
       children: [validChild],
       measurements: [validMeasurement],
+      hasSeenOnboarding: false,
     };
 
     expect(() => validateAppData(data)).not.toThrow();
@@ -285,6 +286,7 @@ describe('recoverAppData', () => {
     const data: AppData = {
       children: [validChild],
       measurements: [validMeasurement],
+      hasSeenOnboarding: true,
     };
 
     const result = recoverAppData(data);
