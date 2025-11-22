@@ -65,7 +65,7 @@ jest.mock('react-native-gesture-handler', () => {
 
 // Mock victory-native with zoom/pan support
 jest.mock('victory-native', () => ({
-  CartesianChart: ({ children, transformState, ...props }: any) => {
+  CartesianChart: ({ children, chartPressState, ...props }: any) => {
     const View = require('react-native').View;
     const Text = require('react-native').Text;
     // Mock the chart render function with points
@@ -79,8 +79,8 @@ jest.mock('victory-native', () => ({
     };
     return (
       <View testID="cartesian-chart" {...props}>
-        <Text testID="transform-state-passed">
-          {transformState ? 'transform-enabled' : 'transform-disabled'}
+        <Text testID="press-state-passed">
+          {chartPressState ? 'press-state-enabled' : 'press-state-disabled'}
         </Text>
         {typeof children === 'function'
           ? children({ points: mockPoints })
@@ -100,6 +100,14 @@ jest.mock('victory-native', () => ({
     const View = require('react-native').View;
     return <View testID="area-range-component" {...props} />;
   },
+  useChartPressState: jest.fn(() => ({
+    state: {
+      isActive: { value: false },
+      x: { value: { value: 0 }, position: { value: 0 } },
+      y: { child: { value: { value: 0 }, position: { value: 0 } } },
+    },
+    isActive: false,
+  })),
   useChartTransformState: jest.fn(() => ({
     state: {
       panActive: { value: false },
@@ -195,8 +203,8 @@ describe('GrowthChartScreen', () => {
     (CDCDataService.getChartData as jest.Mock).mockResolvedValue(mockChartData);
   });
 
-  describe('Zoom and Pan Functionality', () => {
-    it('should initialize chart transform state using useChartTransformState hook', async () => {
+  describe('Chart Interaction', () => {
+    it('should initialize chart press state using useChartPressState hook', async () => {
       const { getByText } = render(
         <GrowthChartScreen navigation={mockNavigation} route={mockRoute} />,
       );
@@ -207,28 +215,28 @@ describe('GrowthChartScreen', () => {
       });
     });
 
-    it('should pass transformState to CartesianChart component', async () => {
+    it('should pass chartPressState to CartesianChart component', async () => {
       const { getByTestId } = render(
         <GrowthChartScreen navigation={mockNavigation} route={mockRoute} />,
       );
 
       await waitFor(() => {
-        const transformIndicator = getByTestId('transform-state-passed');
-        expect(transformIndicator.props.children).toBe('transform-enabled');
+        const pressIndicator = getByTestId('press-state-passed');
+        expect(pressIndicator.props.children).toBe('press-state-enabled');
       });
     });
 
-    it('should display zoom and pan hint text', async () => {
+    it('should display tooltip hint text', async () => {
       const { getByText } = render(
         <GrowthChartScreen navigation={mockNavigation} route={mockRoute} />,
       );
 
       await waitFor(() => {
-        expect(getByText('Pinch to zoom • Drag to pan')).toBeTruthy();
+        expect(getByText('Tap points for details')).toBeTruthy();
       });
     });
 
-    it('should render chart with transform state for weight measurements', async () => {
+    it('should render chart with press state for weight measurements', async () => {
       const { getByText, getByTestId } = render(
         <GrowthChartScreen navigation={mockNavigation} route={mockRoute} />,
       );
@@ -237,11 +245,11 @@ describe('GrowthChartScreen', () => {
         expect(getByText('John Doe')).toBeTruthy();
         expect(getByText('Weight')).toBeTruthy();
         expect(getByTestId('cartesian-chart')).toBeTruthy();
-        expect(getByTestId('transform-state-passed')).toBeTruthy();
+        expect(getByTestId('press-state-passed')).toBeTruthy();
       });
     });
 
-    it('should render chart with transform state for height measurements', async () => {
+    it('should render chart with press state for height measurements', async () => {
       const heightRoute = {
         params: {
           childId: 'test-child-123',
@@ -267,11 +275,11 @@ describe('GrowthChartScreen', () => {
       await waitFor(() => {
         expect(getByText('John Doe')).toBeTruthy();
         expect(getByText('Height')).toBeTruthy();
-        expect(getByTestId('transform-state-passed')).toBeTruthy();
+        expect(getByTestId('press-state-passed')).toBeTruthy();
       });
     });
 
-    it('should render chart with transform state for head circumference measurements', async () => {
+    it('should render chart with press state for head circumference measurements', async () => {
       const headCircRoute = {
         params: {
           childId: 'test-child-123',
@@ -297,7 +305,7 @@ describe('GrowthChartScreen', () => {
       await waitFor(() => {
         expect(getByText('John Doe')).toBeTruthy();
         expect(getByText('Head Circumference')).toBeTruthy();
-        expect(getByTestId('transform-state-passed')).toBeTruthy();
+        expect(getByTestId('press-state-passed')).toBeTruthy();
       });
     });
   });
@@ -335,27 +343,14 @@ describe('GrowthChartScreen', () => {
       });
     });
 
-    it('should render measurements list when measurements exist', async () => {
+    it('should render latest measurement with percentile', async () => {
       const { getByText } = render(
         <GrowthChartScreen navigation={mockNavigation} route={mockRoute} />,
       );
 
       await waitFor(() => {
-        expect(getByText('All Measurements')).toBeTruthy();
-        expect(getByText('2023-06-15')).toBeTruthy();
-        expect(getByText('2023-07-15')).toBeTruthy();
-      });
-    });
-
-    it('should render latest measurement with percentile', async () => {
-      const { getByText, getAllByText } = render(
-        <GrowthChartScreen navigation={mockNavigation} route={mockRoute} />,
-      );
-
-      await waitFor(() => {
         expect(getByText('Latest Measurement')).toBeTruthy();
-        // Use getAllByText since the value appears in both stats card and measurements list
-        expect(getAllByText('11.2 kg').length).toBeGreaterThan(0);
+        expect(getByText('11.2 kg')).toBeTruthy();
       });
     });
   });

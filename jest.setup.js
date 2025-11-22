@@ -34,7 +34,7 @@ jest.mock('@react-native-community/datetimepicker', () => {
   let currentOnChange = null;
   let currentValue = null;
 
-  const MockDateTimePicker = (props) => {
+  const MockDateTimePicker = props => {
     currentOnChange = props.onChange;
     currentValue = props.value;
 
@@ -49,12 +49,12 @@ jest.mock('@react-native-community/datetimepicker', () => {
           }
         },
       },
-      React.createElement(Text, {}, 'DateTimePicker Mock')
+      React.createElement(Text, {}, 'DateTimePicker Mock'),
     );
   };
 
   // Expose a way for tests to simulate date selection
-  MockDateTimePicker.selectDate = (date) => {
+  MockDateTimePicker.selectDate = date => {
     if (currentOnChange) {
       currentOnChange({}, date);
     }
@@ -73,6 +73,7 @@ jest.mock('react-native-gesture-handler', () => {
     PanGestureHandler: View,
     BaseButton: View,
     RectButton: View,
+    ScrollView: View, // Simple mock is fine for now
   };
 });
 
@@ -135,6 +136,15 @@ jest.mock('victory-native', () => {
     Scatter: View,
     AreaRange: View,
     useFont: jest.fn(() => null),
+    useChartTransformState: jest.fn(() => ({ state: {} })),
+    useChartPressState: jest.fn(() => ({
+      state: {
+        isActive: { value: false },
+        x: { value: { value: 0 }, position: { value: 0 } },
+        y: { child: { value: { value: 0 }, position: { value: 0 } } },
+      },
+      isActive: false,
+    })),
   };
 });
 
@@ -145,14 +155,14 @@ jest.mock('react-native-image-picker', () => ({
       didCancel: false,
       errorCode: undefined,
       assets: [{ uri: 'mock-image-uri' }],
-    })
+    }),
   ),
   launchCamera: jest.fn(() =>
     Promise.resolve({
       didCancel: false,
       errorCode: undefined,
       assets: [{ uri: 'mock-camera-uri' }],
-    })
+    }),
   ),
 }));
 

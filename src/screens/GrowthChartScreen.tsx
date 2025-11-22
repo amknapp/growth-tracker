@@ -7,21 +7,18 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Dimensions,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { ScrollView, Swipeable } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import {
   AreaRange,
   CartesianChart,
   Line,
   Scatter,
-  useChartTransformState,
+  useChartPressState,
 } from 'victory-native';
 import {
   GrowthChartNavigationProp,
@@ -44,6 +41,7 @@ import {
 import { useTheme } from '../hooks/useTheme';
 import AppHeader from '../components/AppHeader';
 import { logger } from '../utils/logger';
+import { ToolTipOverlay } from '../components/ToolTipOverlay';
 
 interface Props {
   navigation: GrowthChartNavigationProp;
@@ -59,7 +57,6 @@ const GrowthChartScreen: React.FC<Props> = ({
   const getMeasurementsByType = useAppDataStore(
     state => state.getMeasurementsByType,
   );
-  const deleteMeasurement = useAppDataStore(state => state.deleteMeasurement);
 
   const [child, setChild] = useState<Child | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -73,8 +70,12 @@ const GrowthChartScreen: React.FC<Props> = ({
   );
   const { colors } = useTheme();
 
-  // Pan and zoom state for the chart
-  const { state: chartTransformState } = useChartTransformState();
+  // Press state for tooltips
+  // Initialize with data range to match chart domain
+  const { state: chartPressState } = useChartPressState({
+    x: 0.5, // Match the chart's minAge
+    y: { x: 0.5, child: 0, p5: 0, p25: 0, p50: 0, p75: 0, p95: 0 },
+  });
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -162,39 +163,11 @@ const GrowthChartScreen: React.FC<Props> = ({
       return null;
     }
 
-    // Calculate initial viewport based on child's data
-    let initialMinAge = 0;
-    let initialMaxAge = 36; // Default to first 3 years
-
-    if (measurements.length > 0) {
-      const childAges = measurements.map(m =>
-        calculateAgeInMonths(child.birthDate, m.date),
-      );
-      const childMinAge = Math.min(...childAges);
-      const childMaxAge = Math.max(...childAges);
-
-      // Show window around child's data (±3 months buffer on each side)
-      initialMinAge = Math.max(0, Math.floor(childMinAge - 3));
-      initialMaxAge = Math.ceil(childMaxAge + 3);
-
-      // Ensure at least 6 months wide
-      const range = initialMaxAge - initialMinAge;
-      if (range < 6) {
-        const expansion = (6 - range) / 2;
-        initialMinAge = Math.max(0, initialMinAge - expansion);
-        initialMaxAge = initialMaxAge + expansion;
-      }
-    }
-
-    // Calculate initial y-axis range based on visible x-axis window
-    let initialMinY: number | undefined;
-    let initialMaxY: number | undefined;
-
     // Get all unique x values (ages) from the full dataset
     const percentilesToShow = [5, 25, 50, 75, 95];
     const allAges = new Set<number>();
 
-    // Collect all ages from percentile curves (no filtering - show full data for panning)
+    // Collect all ages from percentile curves
     percentilesToShow.forEach(percentile => {
       const curve = getPercentileCurve(percentile, chartData);
       curve.forEach(point => allAges.add(point.ageInMonths));
@@ -203,6 +176,12 @@ const GrowthChartScreen: React.FC<Props> = ({
     // Sort all ages from percentiles
     const sortedAges = Array.from(allAges).sort((a, b) => a - b);
 
+    // Use full data range for the domain (show entire chart)
+    const minAge = sortedAges.length > 0 ? sortedAges[0] : 0;
+    const maxAge =
+      sortedAges.length > 0 ? sortedAges[sortedAges.length - 1] : 36;
+
+    // Debug: Log first 10 ages to see data distribution
     // Build data array with all percentiles
     type ChartDataPoint = {
       x: number;
@@ -214,7 +193,14 @@ const GrowthChartScreen: React.FC<Props> = ({
       child?: number;
     };
 
-    const percentileData: ChartDataPoint[] = sortedAges.map(age => {
+    // Reduce percentile data density for better tap detection
+    // Only include every Nth age to reduce data points from ~242 to ~40-50
+    const percentileDataInterval = 5; // Every 2.5 months (0.5 * 5)
+    const filteredAges = sortedAges.filter(
+      (_, index) => index % percentileDataInterval === 0,
+    );
+
+    const percentileData: ChartDataPoint[] = filteredAges.map(age => {
       const dataPoint: ChartDataPoint = { x: age };
       percentilesToShow.forEach(percentile => {
         const curve = getPercentileCurve(percentile, chartData);
@@ -227,7 +213,7 @@ const GrowthChartScreen: React.FC<Props> = ({
       return dataPoint;
     });
 
-    // Create data points for child's measurements
+    // Create data points for child's measurements - keep each as separate point
     const childMeasurementData = measurements.map(m => ({
       x: calculateAgeInMonths(child.birthDate, m.date),
       child: m.value,
@@ -238,54 +224,53 @@ const GrowthChartScreen: React.FC<Props> = ({
       (a, b) => a.x - b.x,
     );
 
-    // Calculate y-axis range from data in the initial x-axis window
-    const visibleData = data.filter(
-      d => d.x >= initialMinAge && d.x <= initialMaxAge,
-    );
+    // Calculate y-axis range from full data
+    let initialMinY: number | undefined;
+    let initialMaxY: number | undefined;
 
-    if (visibleData.length > 0) {
-      const allYValues: number[] = [];
-      visibleData.forEach(point => {
-        if ('p5' in point && point.p5 !== undefined) {
-          allYValues.push(point.p5);
-        }
-        if ('p25' in point && point.p25 !== undefined) {
-          allYValues.push(point.p25);
-        }
-        if ('p50' in point && point.p50 !== undefined) {
-          allYValues.push(point.p50);
-        }
-        if ('p75' in point && point.p75 !== undefined) {
-          allYValues.push(point.p75);
-        }
-        if ('p95' in point && point.p95 !== undefined) {
-          allYValues.push(point.p95);
-        }
-        if ('child' in point && point.child !== undefined) {
-          allYValues.push(point.child);
-        }
-      });
-
-      if (allYValues.length > 0) {
-        const minY = Math.min(...allYValues);
-        const maxY = Math.max(...allYValues);
-        const padding = (maxY - minY) * 0.1; // 10% padding
-        initialMinY = Math.max(0, minY - padding);
-        initialMaxY = maxY + padding;
+    const allYValues: number[] = [];
+    data.forEach(point => {
+      if ('p5' in point && point.p5 !== undefined) {
+        allYValues.push(point.p5);
       }
+      if ('p95' in point && point.p95 !== undefined) {
+        allYValues.push(point.p95);
+      }
+      if ('child' in point && point.child !== undefined) {
+        allYValues.push(point.child);
+      }
+    });
+
+    if (allYValues.length > 0) {
+      const minY = Math.min(...allYValues);
+      const maxY = Math.max(...allYValues);
+      const padding = (maxY - minY) * 0.1; // 10% padding
+      initialMinY = Math.max(0, minY - padding);
+      initialMaxY = maxY + padding;
     }
 
     return {
       data,
-      yKeys: ['p5', 'p25', 'p50', 'p75', 'p95', 'child'],
-      initialMinAge,
-      initialMaxAge,
+      yKeys: ['child', 'p5', 'p25', 'p50', 'p75', 'p95'], // child FIRST for tap priority
+      initialMinAge: minAge,
+      initialMaxAge: maxAge,
       initialMinY,
       initialMaxY,
     };
   }, [child, chartData, measurements]);
 
   const victoryData = useMemo(() => prepareVictoryData(), [prepareVictoryData]);
+
+  // Prepare child measurements for tooltip proximity detection
+  const childMeasurementsForTooltip = useMemo(() => {
+    if (!child) {
+      return [];
+    }
+    return measurements.map(m => ({
+      age: calculateAgeInMonths(child.birthDate, m.date),
+      value: m.value,
+    }));
+  }, [child, measurements]);
 
   const styles = getStyles(colors);
 
@@ -338,57 +323,6 @@ const GrowthChartScreen: React.FC<Props> = ({
     return measurementType === 'weight' ? 'kg' : 'cm';
   };
 
-  const handleDeleteMeasurement = (measurementId: string) => {
-    Alert.alert(
-      'Delete Measurement',
-      'Are you sure you want to delete this measurement?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteMeasurement(measurementId);
-              loadData();
-            } catch (err) {
-              logger.error('Error deleting measurement:', err);
-              Alert.alert('Error', 'Failed to delete measurement');
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const renderRightActions = (
-    progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
-    measurementId: string,
-  ) => {
-    const scale = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <View style={styles.deleteButtonContainer}>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteMeasurement(measurementId)}
-        >
-          <Animated.View style={{ transform: [{ scale }] }}>
-            <Icon name="delete" size={28} color="#fff" />
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   return (
     <View style={styles.container}>
       <AppHeader title={child.name} subtitle={getMeasurementLabel()} />
@@ -429,6 +363,21 @@ const GrowthChartScreen: React.FC<Props> = ({
         </TouchableOpacity>
       </View>
 
+      {latestPercentileData && !loadingChart && (
+        <View style={styles.statsCard}>
+          <Text style={styles.statsTitle}>Latest Measurement</Text>
+          <Text style={styles.statsValue}>
+            {latestPercentileData.value.toFixed(1)} {getYAxisLabel()}
+          </Text>
+          <Text style={styles.statsPercentile}>
+            {latestPercentileData.percentile.toFixed(1)}th percentile
+          </Text>
+          <Text style={styles.statsInterpretation}>
+            {interpretPercentile(latestPercentileData.percentile)}
+          </Text>
+        </View>
+      )}
+
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorBannerText}>{error}</Text>
@@ -448,23 +397,22 @@ const GrowthChartScreen: React.FC<Props> = ({
         <View style={styles.chartContainer}>
           <View style={styles.chartTitleContainer}>
             <Text style={styles.chartTitle}>Growth Chart</Text>
-            <Text style={styles.chartHint}>Pinch to zoom • Drag to pan</Text>
+            <Text style={styles.chartHint}>Tap points for details</Text>
           </View>
-
           <View style={styles.chartCanvasContainer}>
             <CartesianChart
               data={victoryData.data}
               xKey="x"
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               yKeys={victoryData.yKeys as any}
+              padding={{ left: 20, right: 20, top: 20, bottom: 20 }}
               axisOptions={{
-                tickCount: 5,
                 labelColor: colors.primary,
                 labelPosition: { x: 'inset', y: 'inset' },
                 formatYLabel: value => `${value}`,
                 formatXLabel: value => `${value}`,
               }}
-              domainPadding={{ left: 10, right: 10, top: 20, bottom: 20 }}
+              domainPadding={{ left: 0, right: 0, top: 20, bottom: 20 }}
               domain={{
                 x: [victoryData.initialMinAge, victoryData.initialMaxAge],
                 y:
@@ -473,12 +421,13 @@ const GrowthChartScreen: React.FC<Props> = ({
                     ? [victoryData.initialMinY, victoryData.initialMaxY]
                     : undefined,
               }}
-              transformState={chartTransformState}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              chartPressState={chartPressState as any}
             >
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {({ points }: any) => (
                 <>
-                  {/* Percentile curves */}
+                  {/* Percentile curves - with reduced data density for better tap detection */}
                   <Line
                     points={points.p5}
                     color="#ccc"
@@ -533,7 +482,7 @@ const GrowthChartScreen: React.FC<Props> = ({
                     connectMissingData={true}
                   />
 
-                  {/* Child's measurements as scatter points */}
+                  {/* Child's measurements as scatter points - RENDER LAST (on top) */}
                   <Scatter
                     points={points.child}
                     radius={6}
@@ -544,6 +493,13 @@ const GrowthChartScreen: React.FC<Props> = ({
                 </>
               )}
             </CartesianChart>
+            <ToolTipOverlay
+              x={chartPressState.x}
+              y={chartPressState.y}
+              isActive={chartPressState.isActive}
+              childMeasurements={childMeasurementsForTooltip}
+              proximityThreshold={3.0}
+            />
           </View>
           <View style={styles.legend}>
             <Text style={styles.legendTitle}>Percentile Curves</Text>
@@ -577,45 +533,6 @@ const GrowthChartScreen: React.FC<Props> = ({
           </View>
         </View>
       )}
-
-      <ScrollView style={styles.scrollView}>
-        {latestPercentileData && !loadingChart && (
-          <View style={styles.statsCard}>
-            <Text style={styles.statsTitle}>Latest Measurement</Text>
-            <Text style={styles.statsValue}>
-              {latestPercentileData.value.toFixed(1)} {getYAxisLabel()}
-            </Text>
-            <Text style={styles.statsPercentile}>
-              {latestPercentileData.percentile.toFixed(1)}th percentile
-            </Text>
-            <Text style={styles.statsInterpretation}>
-              {interpretPercentile(latestPercentileData.percentile)}
-            </Text>
-          </View>
-        )}
-
-        {measurements.length > 0 && !loadingChart && (
-          <View style={styles.measurementsList}>
-            <Text style={styles.measurementsTitle}>All Measurements</Text>
-            {measurements.map(m => (
-              <Swipeable
-                key={m.id}
-                renderRightActions={(progress, dragX) =>
-                  renderRightActions(progress, dragX, m.id)
-                }
-                overshootRight={false}
-              >
-                <View style={styles.measurementItem}>
-                  <Text style={styles.measurementDate}>{m.date}</Text>
-                  <Text style={styles.measurementValue}>
-                    {m.value.toFixed(1)} {getYAxisLabel()}
-                  </Text>
-                </View>
-              </Swipeable>
-            ))}
-          </View>
-        )}
-      </ScrollView>
     </View>
   );
 };
@@ -625,9 +542,6 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    scrollView: {
-      flex: 1,
     },
     standardToggleContainer: {
       flexDirection: 'row',
@@ -658,8 +572,9 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     },
     statsCard: {
       backgroundColor: colors.card,
-      margin: 16,
-      padding: 20,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      padding: 16,
       borderRadius: 12,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
@@ -670,28 +585,28 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     statsTitle: {
       fontSize: 14,
       color: colors.textSecondary,
-      marginBottom: 8,
+      marginBottom: 4,
     },
     statsValue: {
-      fontSize: 32,
+      fontSize: 24,
       fontWeight: 'bold',
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     statsPercentile: {
-      fontSize: 18,
+      fontSize: 16,
       color: colors.primary,
       fontWeight: '600',
-      marginBottom: 4,
+      marginBottom: 2,
     },
     statsInterpretation: {
       fontSize: 14,
       color: colors.textSecondary,
     },
     chartContainer: {
+      flex: 1,
       backgroundColor: colors.card,
       margin: 16,
-      marginTop: 0,
       paddingVertical: 16,
       paddingRight: 16,
       borderRadius: 12,
@@ -717,9 +632,9 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       fontStyle: 'italic',
     },
     emptyChartContainer: {
+      flex: 1,
       backgroundColor: colors.card,
       margin: 16,
-      marginTop: 0,
       paddingVertical: 16,
       paddingRight: 16,
       borderRadius: 12,
@@ -730,7 +645,7 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       elevation: 3,
     },
     emptyChart: {
-      height: 200,
+      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -793,53 +708,6 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       fontSize: 12,
       color: colors.textSecondary,
     },
-    measurementsList: {
-      backgroundColor: colors.card,
-      margin: 16,
-      marginTop: 0,
-      padding: 16,
-      borderRadius: 12,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    measurementsTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 12,
-    },
-    measurementItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingVertical: 12,
-      paddingHorizontal: 4,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    measurementDate: {
-      fontSize: 14,
-      color: colors.textSecondary,
-    },
-    measurementValue: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    deleteButtonContainer: {
-      justifyContent: 'center',
-    },
-    deleteButton: {
-      backgroundColor: colors.error,
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: 80,
-      height: '100%',
-      borderRadius: 0,
-    },
     errorText: {
       fontSize: 16,
       color: colors.textSecondary,
@@ -887,7 +755,7 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
       color: colors.textSecondary,
     },
     chartCanvasContainer: {
-      height: 350,
+      flex: 1,
       width: '100%',
     },
   });
