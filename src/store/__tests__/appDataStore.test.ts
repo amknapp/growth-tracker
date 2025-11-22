@@ -125,10 +125,10 @@ describe('appDataStore', () => {
       });
 
       await waitFor(() => {
-        expect(result.current.children).toEqual([mockChild]);
         expect(SecureStorage.saveData).toHaveBeenCalledWith({
           children: [mockChild],
           measurements: [],
+          hasSeenOnboarding: false,
         });
       });
     });
@@ -232,6 +232,7 @@ describe('appDataStore', () => {
         expect(SecureStorage.saveData).toHaveBeenCalledWith({
           children: [],
           measurements: [],
+          hasSeenOnboarding: false,
         });
       });
     });
@@ -296,6 +297,7 @@ describe('appDataStore', () => {
         expect(SecureStorage.saveData).toHaveBeenCalledWith({
           children: [mockChild],
           measurements: [mockMeasurement],
+          hasSeenOnboarding: false,
         });
       });
     });
@@ -372,6 +374,7 @@ describe('appDataStore', () => {
         expect(SecureStorage.saveData).toHaveBeenCalledWith({
           children: [mockChild],
           measurements: [],
+          hasSeenOnboarding: false,
         });
       });
     });

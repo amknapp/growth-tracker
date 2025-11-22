@@ -59,7 +59,8 @@ export interface GrowthChartDataPoint {
  * Growth chart data organized by type and sex
  */
 export interface GrowthChartData {
-  [key: string]: { // measurement type
+  [key: string]: {
+    // measurement type
     [key: string]: GrowthChartDataPoint[]; // sex
   };
 }
@@ -70,6 +71,7 @@ export interface GrowthChartData {
 export interface AppData {
   children: Child[];
   measurements: Measurement[];
+  hasSeenOnboarding?: boolean;
 }
 
 /**

@@ -129,7 +129,8 @@ export function validateAppData(data: unknown): AppData {
     throw new Error('Invalid data structure: not an object');
   }
 
-  const { children, measurements } = data as Partial<AppData>;
+  const { children, measurements, hasSeenOnboarding } =
+    data as Partial<AppData>;
 
   // Check that both arrays exist
   if (!Array.isArray(children)) {
@@ -178,12 +179,16 @@ export function validateAppData(data: unknown): AppData {
     return {
       children: validChildren,
       measurements: validMeasurements.filter(m => childIds.has(m.childId)),
+      hasSeenOnboarding:
+        typeof hasSeenOnboarding === 'boolean' ? hasSeenOnboarding : false,
     };
   }
 
   return {
     children: validChildren,
     measurements: validMeasurements,
+    hasSeenOnboarding:
+      typeof hasSeenOnboarding === 'boolean' ? hasSeenOnboarding : false,
   };
 }
 
@@ -204,7 +209,8 @@ export function recoverAppData(data: unknown): AppData {
     };
 
     if (data && typeof data === 'object') {
-      const { children, measurements } = data as Partial<AppData>;
+      const { children, measurements, hasSeenOnboarding } =
+        data as Partial<AppData>;
 
       // Recover valid children
       if (Array.isArray(children)) {
@@ -217,6 +223,11 @@ export function recoverAppData(data: unknown): AppData {
         recovered.measurements = measurements.filter(
           m => isValidMeasurement(m) && childIds.has(m.childId),
         );
+      }
+
+      // Recover onboarding status
+      if (typeof hasSeenOnboarding === 'boolean') {
+        recovered.hasSeenOnboarding = hasSeenOnboarding;
       }
     }
 
