@@ -69,7 +69,10 @@ const EditChildScreen: React.FC<Props> = ({ navigation, route }) => {
     // Populate form with existing data
     setName(child.name);
     setSex(child.sex);
-    setBirthDate(new Date(child.birthDate));
+    // Parse date string as local time to avoid timezone shift
+    // '2023-01-15' parsed with new Date() is UTC, which can shift days in local time
+    const [year, month, day] = child.birthDate.split('-').map(Number);
+    setBirthDate(new Date(year, month - 1, day));
     setAvatarUri(child.avatarUri || null);
     setLoading(false);
   }, [childId, getChild, navigation]);
