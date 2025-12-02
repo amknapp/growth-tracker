@@ -27,6 +27,7 @@ import { formatAge, getCurrentAge } from '../utils/ageCalculator';
 import { useTheme } from '../hooks/useTheme';
 import { logger } from '../utils/logger';
 import AppHeader from '../components/AppHeader';
+import { exportChildMeasurements } from '../services/csvExportService';
 
 interface Props {
   navigation: ChildProfileNavigationProp;
@@ -40,6 +41,8 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
     state => state.getMeasurementsForChild,
   );
   const deleteMeasurement = useAppDataStore(state => state.deleteMeasurement);
+  const children = useAppDataStore(state => state.children);
+  const allMeasurements = useAppDataStore(state => state.measurements);
   const [child, setChild] = useState<Child | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [_loading, setLoading] = useState(true);
@@ -126,6 +129,15 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
         },
       ],
     );
+  };
+
+  const handleExportMeasurements = async () => {
+    try {
+      await exportChildMeasurements(childId, allMeasurements, children);
+    } catch (error) {
+      logger.error('Error exporting measurements:', error);
+      Alert.alert('Error', 'Failed to export measurements');
+    }
   };
 
   const renderRightActions = (
@@ -223,9 +235,20 @@ const ChildProfileScreen: React.FC<Props> = ({ navigation, route }) => {
         </TouchableOpacity>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            All Measurements ({measurements.length})
-          </Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              All Measurements ({measurements.length})
+            </Text>
+            {measurements.length > 0 && (
+              <TouchableOpacity
+                style={styles.exportButton}
+                onPress={handleExportMeasurements}
+              >
+                <Icon name="file-download" size={24} color={colors.primary} />
+                <Text style={styles.exportButtonText}>Export CSV</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {measurements.length === 0 ? (
             <Text style={styles.emptyText}>No measurements yet</Text>
@@ -290,11 +313,34 @@ const getStyles = (colors: typeof import('../constants/colors').LightColors) =>
     section: {
       padding: 16,
     },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
     sectionTitle: {
       fontSize: 20,
       fontWeight: '600',
       color: colors.text,
-      marginBottom: 12,
+    },
+    exportButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: colors.card,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    exportButtonText: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: '600',
+      marginLeft: 4,
     },
     measurementCard: {
       flexDirection: 'row',
